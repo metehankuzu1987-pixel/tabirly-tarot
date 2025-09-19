@@ -207,6 +207,11 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 [data-theme="light"] .rev-badge{
   background:#ef476f; color:#fff;
 }
+/* Yalnızca dil/tema seçicileri dar tut (renkler temadan gelir) */
+.compact-select{ width:auto; }
+
+/* İstersen ok ikonunu sadeleştir (opsiyonel) */
+select{ appearance:auto; } /* Safari için: -webkit-appearance:auto; */
 
 </style>
 </head>
@@ -245,7 +250,16 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
         <label class="inline"><input type="checkbox" id="showImages" style="accent-color:#ffd166"/> Kart görselleri</label>
         <label class="inline"><input type="checkbox" id="pickMode" style="accent-color:#ffd166"/> Seçmeli mod</label>
         <label class="inline">Dil:
-          <select id="lang" style="width:auto;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0f1320;color:var(--ink)">
+          <select id="lang"  class="compact-select">
+  <option value="tr">Türkçe</option>
+  <option value="en">English</option>
+</select>
+
+<select id="theme" class="compact-select">
+  <option value="dark">Koyu</option>
+  <option value="light">Açık</option>
+</select>
+
             <option value="tr">Türkçe</option>
             <option value="en">English</option>
           </select>

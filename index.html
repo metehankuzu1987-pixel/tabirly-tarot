@@ -127,7 +127,6 @@ select{appearance:auto}
 <body>
   <div class="wrap">
     <header>
-      
       <div class="hgroup">
         <h1>Tabirly Tarot </h1>
         <p>Tek Kart, 3 Kart, Kelt Haçı, İlişki • Seçmeli mod • Paylaş/Görsel • LocalStorage(Yani bilgileriniz bize hiç ulaşmıyor) • TR/EN • Tema</p>
@@ -245,6 +244,11 @@ const el=(t,c)=>{const x=document.createElement(t); if(c)x.className=c; return x
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
 const slug=name=>name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 
+// 🔧 Repo alt dizinlerinde kırılmayan sağlam asset yolu
+function asset(relPath){
+  return new URL(relPath, location.href).href;
+}
+
 const board=qs('#board'), deck=qs('#deck');
 const dealBtn=qs('#deal'), spreadSel=qs('#spread'), qInput=qs('#question');
 const allowRev=qs('#allowReversed'), autoFlip=qs('#autoFlip'), showImages=qs('#showImages'), pickMode=qs('#pickMode');
@@ -253,7 +257,7 @@ const summary=qs('#summary'), explain=qs('#explain');
 const sharebar=qs('#sharebar'), copyBtn=qs('#copyLink'), waBtn=qs('#shareWa'), xBtn=qs('#shareX'), savePng=qs('#savePng');
 const longSec=qs('#longReads'), longBox=qs('#longList');
 
-const KEY='tabirly_tarot_last_v44';
+const KEY='tabirly_tarot_last_v45';
 const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
@@ -265,20 +269,45 @@ function shortText(card){return (card.reversed?card.reversed:card.upright)}
 function getState(){return{type:spreadSel.value,question:qInput.value.trim(),allowReversed:!!allowRev.checked,autoFlip:!!autoFlip.checked,showImages:!!showImages.checked,pickMode:!!pickMode.checked,lang:langSel.value,theme:themeSel.value,cards:LAST_PICKS.map((p,i)=>({name:p.name,reversed:p.reversed,pos:i}))}};
 function saveLocal(st){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
 function loadLocal(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null}}
-function shareURL(st){const s=encodeState(st);return `${location.origin}${location.pathname}#s=${s}`}
 
+// 🔧 Hash paylaşım linki sağlamlaştırma
+function shareURL(st){
+  const s=encodeState(st);
+  const base = location.href.split('#')[0].split('?')[0];
+  return `${base}#s=${s}`;
+}
+
+// 🔧 innerHTML yerine DOM tabanlı render — görsel kaybolmaz
 function renderCard(card,type,idx){
-  const c=el('div','tarot-card'); if(card.reversed)c.classList.add('is-reversed'); c.setAttribute('role','button'); c.tabIndex=0;
-  const back=el('div','face back'); back.innerHTML='<span style="color:#ffd166;font-weight:800">TABIRLY</span>';
+  const c=el('div','tarot-card'); 
+  if(card.reversed) c.classList.add('is-reversed'); 
+  c.setAttribute('role','button'); 
+  c.tabIndex=0;
+
+  const back=el('div','face back'); 
+  back.innerHTML='<span style="color:#ffd166;font-weight:800">TABIRLY</span>';
+
   const front=el('div','face front');
   const pos=POSITIONS[type][idx]||`Kart ${idx+1}`;
-  const title=t(card.name); const short=shortText(card);
-  if(showImages && showImages.checked){ const img=new Image(); img.className='bg'; img.alt=''; img.loading='lazy'; img.src=`img/${slug(card.name)}.jpg`; img.onerror=()=>img.remove(); front.appendChild(img); }
-  front.innerHTML+=`
-    <div class="pos-badge">${pos}</div>
-    <div class="rev-badge">${langSel.value==='tr'?'TERS':'REV'}</div>
-    <div class="title">${title}</div>
-    <div class="mini">${short}</div>`;
+  const title=t(card.name); 
+  const short=shortText(card);
+
+  if(showImages && showImages.checked){
+    const img=new Image();
+    img.className='bg'; 
+    img.alt='';
+    img.loading='lazy'; 
+    img.src=asset(`img/${slug(card.name)}.jpg`);
+    // img.crossOrigin='anonymous'; // harici CDN kullanırsan ve CORS açıksa
+    img.onerror=()=>img.remove(); 
+    front.appendChild(img);
+  }
+
+  const posEl=el('div','pos-badge'); posEl.textContent=pos; front.appendChild(posEl);
+  const revEl=el('div','rev-badge'); revEl.textContent=(langSel.value==='tr'?'TERS':'REV'); front.appendChild(revEl);
+  const ttlEl=el('div','title'); ttlEl.textContent=title; front.appendChild(ttlEl);
+  const miniEl=el('div','mini'); miniEl.textContent=short; front.appendChild(miniEl);
+
   c.append(back,front);
   c.addEventListener('click',()=>c.classList.toggle('flipped'));
   c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.classList.toggle('flipped');}});
@@ -365,7 +394,20 @@ function afterDeal(type){
   xBtn.onclick =()=>{ const t=encodeURIComponent(`Tabirly Tarot — ${url}`); window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank'); };
 }
 
-savePng?.addEventListener('click',async()=>{ try{ const node=board; const canvas=await html2canvas(node,{backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12',useCORS:true,scale:2}); const link=document.createElement('a'); link.download='tabirly-tarot.png'; link.href=canvas.toDataURL('image/png'); link.click(); }catch(e){ alert('Görsel oluşturulamadı :(');} });
+savePng?.addEventListener('click',async()=>{ 
+  try{ 
+    const node=board; 
+    const canvas=await html2canvas(node,{
+      backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12',
+      useCORS:true,
+      scale:2
+    }); 
+    const link=document.createElement('a'); 
+    link.download='tabirly-tarot.png'; 
+    link.href=canvas.toDataURL('image/png'); 
+    link.click(); 
+  }catch(e){ alert('Görsel oluşturulamadı :(');} 
+});
 
 function applyTheme(){ document.documentElement.setAttribute('data-theme', themeSel.value); saveLocal(getState()); }
 themeSel.addEventListener('change',applyTheme);

@@ -53,9 +53,15 @@ select,input{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.08
   box-shadow:var(--shadow); cursor:pointer; will-change:transform;
   width:100%; max-width:100px; justify-self:center;
 }
-.tarot-card.flipped{transform:rotateY(180deg)}
-.tarot-card .face{position:absolute;inset:0;display:grid;place-items:center;backface-visibility:hidden;border-radius:12px;overflow:hidden}
+@media (max-width:700px){.tarot-card{max-width:140px}}
+
+.tarot-card .face{
+  position:absolute; inset:0; border-radius:12px; overflow:hidden;
+  /* layout’ı img değil, kart kontrol etsin */
+  display:block;
+}
 .tarot-card .back{
+  /* default arka yüz (board ve pick mode için aynı gradient) */
   background:
     linear-gradient(135deg, rgba(127,184,255,.18), rgba(121,233,211,.12)),
     repeating-radial-gradient(circle at 50% 38%, #202744 0 7px, #1a2240 7px 14px);
@@ -66,8 +72,21 @@ select,input{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.08
   padding:var(--card-pad);
   text-align:center;
   border:1px solid rgba(255,255,255,.08);
-  position:relative;
+  position:relative;               /* img için referans */
+  display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
 }
+
+/* İmaj katmanı — TAM DOLDUR (kritik kısım) */
+.tarot-card .front img.bg{
+  position:absolute; top:0; right:0; bottom:0; left:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center;
+  opacity:.42; filter:contrast(1.05) saturate(1.05) brightness(.9);
+  z-index:1; pointer-events:none; transform:translateZ(0);
+}
+.tarot-card .front > :not(img){ position:relative; z-index:2 }
+
+/* Başlık/mini */
 .title{font-weight:800;margin-top:6px;font-size:var(--title-size)}
 .mini{font-size:var(--mini-size);color:var(--muted);margin-top:3px;white-space:pre-wrap;overflow-wrap:break-word}
 
@@ -102,106 +121,15 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 }
 [data-theme="light"] .tarot-card .front{background:linear-gradient(180deg,#ffffff,#f7f9ff);border:1px solid rgba(15,23,42,.08)}
 [data-theme="light"] .pos-badge{background:rgba(9,16,22,.08);color:#091016}
+[data-theme="light"] .tarot-card .front img.bg{ opacity:.35 }
 
-/* Image layering */
-.tarot-card .front{ position:relative; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
-.tarot-card.has-img .front{ background:transparent !important; }
-.tarot-card .front img.bg{
-  position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; object-position:center;
-  opacity:.42; filter:contrast(1.05) saturate(1.05) brightness(.9);
-  z-index:1 !important; pointer-events:none; transform:translateZ(0);
-}
-[data-theme="light"] .tarot-card .front img.bg{ opacity:.35; }
-.tarot-card .front > :not(img){ position:relative; z-index:2 !important; }
+/* PICK MODE — destede ön yüz kapalı, arka yüz gradient */
+.tarot-card.in-deck .front{ display:none }
+.tarot-card.in-deck .back{ display:block }   /* garanti olsun */
 
-@media (max-width:700px){.tarot-card{max-width:140px}}
-
-/* PICK MODE (deck only) */
-.tarot-card.in-deck .front{ display:none; }
-.tarot-card.in-deck .back{ position:relative; }
-  /* ==== Tight pack (dağıtmadan) ==== */
-
-/* 1) Genel boşluğu kapat */
-#board.grid,
-#deck.grid{
-  gap: 0 !important;
-  margin: 0 !important;
-}
-
-/* 2) Kartların arasında görsel boşluk yaratan gölgeyi kaldır */
-#board .tarot-card,
-#deck .tarot-card{
-  box-shadow: none !important;
-}
-
-/* 3) Normal spread'lerde (celtic & relation HARİÇ) kolonları sıkılaştır
-      - auto-fill + minmax sabit minimum verir, kartlar taşmadan sıkı dizilir
-      - celtic/relation özel kolon düzeniniz bozulmasın diye dokunmuyoruz */
-#board.grid:not([data-type="celtic"]):not([data-type="relation"]){
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
-}
-
-/* 4) Pick mode destesi de sıkı dursun (biraz daha küçük min genişlik) */
-#deck.grid{
-  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)) !important;
-}
-
-/* 5) Kenar yuvarlak kalsın istiyorsan bırak; tam yapışsın diyorsan 0 yap */
-#board .tarot-card .front,
-#board .tarot-card .back,
-#deck .tarot-card .front,
-#deck .tarot-card .back{
-  border-radius: 0px;   /* tamamen yapışsın istersen 0 yap */
-}
-
-/* 6) Mevcut media query’lerin kartı büyütmesini istemiyorsan nötralize et */
-@media (max-width:700px){
-  .tarot-card{ max-width: 120px !important; } /* kendi isteğine göre 100–140 */
-}
-/* ==== Kartların arkasına sabit renk ==== */
-.tarot-card .back {
-  background: #1e1e2e !important;   /* koyu morumsu bir renk */
-}
-
-[data-theme="light"] .tarot-card .back {
-  background: #dfe6f7 !important;   /* açık temada soft gri/mavi */
-}
-/* === Yan boşlukları da sıfırla === */
-#board.grid,
-#deck.grid {
-  gap: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;    /* 🔑 sağ/sol padding varsa kaldır */
-  justify-items: stretch;   /* kartları hücreye yay */
-}
-
-#board .tarot-card,
-#deck .tarot-card {
-  margin: 0 !important;     /* kartların kendi marginlerini sıfırla */
-  box-shadow: none !important;
-  border-radius: 0 !important;  /* tam yapışık istersen */
-  width: 100% !important;       /* kolon genişliğini tam doldur */
-}
-  /* Pick mode arka yüz görünür renk */
-.tarot-card.in-deck .back {
-  background: #1e1e2e !important; /* koyu tema için */
-}
-[data-theme="light"] .tarot-card.in-deck .back {
-  background: #e8efff !important; /* açık tema için */
-}
-/* ==== Pick Mode arka yüz gradient ==== */
-.tarot-card.in-deck .back {
-  background:
-    linear-gradient(135deg, rgba(127,184,255,.18), rgba(121,233,211,.12)),
-    repeating-radial-gradient(circle at 50% 38%, #202744 0 7px, #1a2240 7px 14px) !important;
-}
-
-[data-theme="light"] .tarot-card.in-deck .back {
-  background:
-    linear-gradient(135deg, rgba(179,216,255,.45), rgba(214,198,255,.35)),
-    repeating-radial-gradient(circle at 50% 38%, #e8efff 0 7px, #dee9ff 7px 14px) !important;
-}
+/* Sıkı paket istiyorsan (opsiyonel): grid aralıklarını kapat */
+#board.grid.tight, #deck.grid.tight{ gap:0; margin:0; }
+#board.grid.tight .tarot-card, #deck.grid.tight .tarot-card{ box-shadow:none; border-radius:0 }
 
 </style>
 </head>

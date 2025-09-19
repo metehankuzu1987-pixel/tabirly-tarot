@@ -120,22 +120,46 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* PICK MODE (deck only) */
 .tarot-card.in-deck .front{ display:none; }
 .tarot-card.in-deck .back{ position:relative; }
-  /* ==== SIK PAKET TAROT ==== */
-:root { --gap: 0px; }                     /* grid boşluğu yok */
-.grid{
+  /* ==== Tight pack (dağıtmadan) ==== */
+
+/* 1) Genel boşluğu kapat */
+#board.grid,
+#deck.grid{
   gap: 0 !important;
   margin: 0 !important;
-  justify-items: stretch;
 }
-.tarot-card{
-  width: 100%;
-  max-width: none;                         /* 100px sınırı kalkar */
-  border-radius: 0 !important;             /* kenarlar birleşsin */
-  box-shadow: none !important;             /* gölge boşluğu engellemesin */
+
+/* 2) Kartların arasında görsel boşluk yaratan gölgeyi kaldır */
+#board .tarot-card,
+#deck .tarot-card{
+  box-shadow: none !important;
 }
-.tarot-card .front,
-.tarot-card .back{ border-radius: 0 !important; }
-.tarot-card .front{ border: none !important; }
+
+/* 3) Normal spread'lerde (celtic & relation HARİÇ) kolonları sıkılaştır
+      - auto-fill + minmax sabit minimum verir, kartlar taşmadan sıkı dizilir
+      - celtic/relation özel kolon düzeniniz bozulmasın diye dokunmuyoruz */
+#board.grid:not([data-type="celtic"]):not([data-type="relation"]){
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+}
+
+/* 4) Pick mode destesi de sıkı dursun (biraz daha küçük min genişlik) */
+#deck.grid{
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)) !important;
+}
+
+/* 5) Kenar yuvarlak kalsın istiyorsan bırak; tam yapışsın diyorsan 0 yap */
+#board .tarot-card .front,
+#board .tarot-card .back,
+#deck .tarot-card .front,
+#deck .tarot-card .back{
+  border-radius: 6px;   /* tamamen yapışsın istersen 0 yap */
+}
+
+/* 6) Mevcut media query’lerin kartı büyütmesini istemiyorsan nötralize et */
+@media (max-width:700px){
+  .tarot-card{ max-width: 120px !important; } /* kendi isteğine göre 100–140 */
+}
+
 </style>
 </head>
 <body>

@@ -130,6 +130,39 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* Sıkı paket istiyorsan (opsiyonel): grid aralıklarını kapat */
 #board.grid.tight, #deck.grid.tight{ gap:0; margin:0; }
 #board.grid.tight .tarot-card, #deck.grid.tight .tarot-card{ box-shadow:none; border-radius:0 }
+/* FACE katmanları: 3D flip için şart */
+.tarot-card {
+  transform-style: preserve-3d;  /* zaten vardı, kalsın */
+}
+.tarot-card .face{
+  position:absolute;
+  inset:0;
+  border-radius:12px;
+  overflow:hidden;
+  display:block;
+
+  /* 🔧 kritik: ters tarafa bakarken yüzü gizle */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Ön yüz her zaman 180°; kart .flipped olunca 360° görünür olur */
+.tarot-card .front{
+  transform: rotateY(180deg);
+}
+
+/* (Varsa) daha önce eklediğin .front img.bg kalabilir,
+   ama ona kesinlikle rotate vermiyoruz, sadece absolute kaplasın */
+.tarot-card .front img.bg{
+  position:absolute; top:0; right:0; bottom:0; left:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center;
+  opacity:.42;
+  pointer-events:none;
+  z-index:1;
+}
+.tarot-card .front > :not(img){ z-index:2; position:relative; }
 
 </style>
 </head>

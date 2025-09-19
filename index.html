@@ -122,6 +122,18 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .compact-select{width:auto}
 select{appearance:auto}
 @media (max-width:700px){.tarot-card{max-width:100px}}
+/* Kart dönüşünü görünür kıl (perspektif) */
+.grid{ perspective: 1200px; }
+
+/* Kartın başlangıç hali net olsun */
+.tarot-card{ transform: rotateY(0deg); }
+
+/* İç yüzeyler tıklamayı engellemesin */
+.tarot-card .face{ pointer-events: none; }
+
+/* Kartın kendisi tıklanabilir kalsın */
+.tarot-card{ pointer-events: auto; }
+
 </style>
 </head>
 <body>
@@ -369,18 +381,17 @@ function afterDeal(type){
 
   // Otomatik flip (iptal edilebilir)
   cancelAllTimers();
-  if (autoFlip && autoFlip.checked){
-    const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
-    let i = 0;
-    function tick(){
-      if(i >= cards.length) return;
-      const c = cards[i++];
-      void c.offsetHeight;
-      c.classList.add('flipped');
-      schedule(tick, 150);
-    }
-    requestAnimationFrame(()=> schedule(tick, 120));
+if (autoFlip && autoFlip.checked) {
+  const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
+  let i = 0;
+  function tick(){
+    if(i >= cards.length) return;
+    cards[i++].classList.add('flipped');
+    setTimeout(tick, 150);
   }
+  requestAnimationFrame(()=> setTimeout(tick, 120));
+}
+
 
   // Kaydet & paylaş
   const st=getState(); saveLocal(st);
@@ -434,6 +445,13 @@ pickMode.addEventListener('change',()=>{
     if(pickMode.checked) renderDeck();
   }
 })();
+  // Delegasyon: board içindeki herhangi bir karta tıklanınca çevir
+board.addEventListener('click', (e)=>{
+  const card = e.target.closest('.tarot-card');
+  if(!card) return;
+  card.classList.toggle('flipped');
+});
+
 </script>
 </body>
 </html>

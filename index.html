@@ -122,7 +122,35 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .compact-select{width:auto}
 select{appearance:auto}
 @media (max-width:700px){.tarot-card{max-width:100px}}
+/* --- Ekle: katmanlama ve opaklık düzeltmesi --- */
+.tarot-card .front{
+  display:flex;                 /* grid yerine flex */
+  flex-direction:column;
+  justify-content:flex-end;
+  align-items:center;
+  position:relative;            /* z-index için */
+}
 
+.tarot-card .front img.bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:.42;                  /* .26 → .42 (daha belirgin) */
+  z-index:0;
+  pointer-events:none;
+  transform:translateZ(0);      /* olası paint/glitch fix */
+}
+
+/* Açık temada biraz kıs */
+[data-theme="light"] .tarot-card .front img.bg{ opacity:.35; }
+
+/* Metin ve rozetler görselin üstünde kalsın */
+.tarot-card .front > :not(img){
+  position:relative;
+  z-index:1;
+}
 </style>
 </head>
 <body>

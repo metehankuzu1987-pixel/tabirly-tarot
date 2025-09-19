@@ -130,39 +130,67 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* Sıkı paket istiyorsan (opsiyonel): grid aralıklarını kapat */
 #board.grid.tight, #deck.grid.tight{ gap:0; margin:0; }
 #board.grid.tight .tarot-card, #deck.grid.tight .tarot-card{ box-shadow:none; border-radius:0 }
-/* FACE katmanları: 3D flip için şart */
-.tarot-card {
-  transform-style: preserve-3d;  /* zaten vardı, kalsın */
-}
-.tarot-card .face{
-  position:absolute;
-  inset:0;
-  border-radius:12px;
-  overflow:hidden;
-  display:block;
-
-  /* 🔧 kritik: ters tarafa bakarken yüzü gizle */
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+/* === FLIP MEKANİĞİNİ STABİLLEŞTİR (yeni model) === */
+/* Kart artık dönmüyor; yüzler (back/front) dönüyor. */
+.tarot-card{ 
+  position: relative;
   transform-style: preserve-3d;
 }
 
-/* Ön yüz her zaman 180°; kart .flipped olunca 360° görünür olur */
-.tarot-card .front{
-  transform: rotateY(180deg);
+/* Ortak yüz ayarları */
+.tarot-card .face{
+  position:absolute; inset:0;
+  border-radius:12px; overflow:hidden;
+  /* içerik hizalama (front için metinler vs.) */
+  display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
 }
 
-/* (Varsa) daha önce eklediğin .front img.bg kalabilir,
-   ama ona kesinlikle rotate vermiyoruz, sadece absolute kaplasın */
+/* Görüntü ters görünmesin diye her yüz kendi backface’ini saklar */
+.tarot-card .back,
+.tarot-card .front{
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Varsayılan durum: back bize bakar, front arkada */
+.tarot-card .back{  transform: rotateY(0deg); }
+.tarot-card .front{ transform: rotateY(180deg); }
+
+/* Kart “flipped” olunca: back arkaya döner, front öne gelir */
+.tarot-card.flipped .back{  transform: rotateY(180deg); }
+.tarot-card.flipped .front{ transform: rotateY(0deg); }
+
+/* Ön yüzde arkaplan görseli katmanlama */
 .tarot-card .front img.bg{
-  position:absolute; top:0; right:0; bottom:0; left:0;
-  width:100%; height:100%;
+  position:absolute; inset:0; width:100%; height:100%;
   object-fit:cover; object-position:center;
   opacity:.42;
+  filter:contrast(1.05) saturate(1.05) brightness(.9);
   pointer-events:none;
   z-index:1;
 }
-.tarot-card .front > :not(img){ z-index:2; position:relative; }
+/* Metin ve rozetler görselin ÜSTÜNDE */
+.tarot-card .front > :not(img){ position:relative; z-index:2; }
+
+/* (Opsiyonel) Light temada görsel opaklığını azıcık düşür */
+[data-theme="light"] .tarot-card .front img.bg{ opacity:.35; }
+
+/* --- Pick mode arka yüz görünür ve renkli kalsın --- */
+.tarot-card.in-deck .front{ display:none; }         /* destede yalnızca arka yüz */
+.tarot-card.in-deck .back{
+  position:relative;
+  background:
+    linear-gradient(135deg, rgba(127,184,255,.18), rgba(121,233,211,.12)),
+    repeating-radial-gradient(circle at 50% 38%, #202744 0 7px, #1a2240 7px 14px);
+}
+[data-theme="light"] .tarot-card.in-deck .back{
+  background:
+    linear-gradient(135deg, rgba(179,216,255,.45), rgba(214,198,255,.35)),
+    repeating-radial-gradient(circle at 50% 38%, #e8efff 0 7px, #dee9ff 7px 14px);
+}
+
+/* --- Eski kuralları etkisizleştir: kartın kendisini döndürmeyelim --- */
+.tarot-card.flipped{ transform: none !important; }   /* varsa eski rotateY(180) kuralını geçersiz kıl */
 
 </style>
 </head>

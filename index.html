@@ -223,8 +223,7 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* ================================
    0) VERİYİ UZAKTAN YÜKLE (GitHub JSON)
 ================================ */
-const DATA_URL = "https://github.com/metehankuzu1987-pixel/tabirly-tarot/blob/main/tarot_full_tr_en_reversed.json
-"; // ← BURAYI KENDİ URL'İNLE DEĞİŞTİR
+const DATA_URL = "https://raw.githubusercontent.com/metehankuzu1987-pixel/tabirly-tarot/refs/heads/main/tarot_full_tr_en_reversed.json"; // ← BURAYI KENDİ URL'İNLE DEĞİŞTİR
 let TAROT = { cards: [] }; // fetch sonrası dolduracağız
 
 async function loadTarot() {

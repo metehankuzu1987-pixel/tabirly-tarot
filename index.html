@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tabirly | Tarot Tool v4.3</title>
+<title>Tabirly | Tarot Tool v4.4</title>
 <meta name="description" content="Tabirly tarot açılımları: Tek Kart, 3 Kart, Kelt Haçı, İlişki Açılımı. Seçmeli mod, paylaşım, localStorage, görsel indir, TR/EN, tema." />
 <meta property="og:title" content="Tabirly | Tarot Tool" />
 <meta property="og:description" content="Tek Kart, 3 Kart, Kelt Haçı, İlişki açılımı—sonucu link ve görsel olarak paylaş." />
@@ -11,112 +11,56 @@
 <meta property="og:url" content="https://tarot.tabirly.com" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%237f5af0'/><stop offset='1' stop-color='%23ffd166'/></linearGradient></defs><rect rx='14' width='64' height='64' fill='url(%23g)'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+
 <style>
 :root{
-  /* ---- Dark (varsayılan) pastel tonlar ---- */
-  --bg: #0e1118;
-  --bg2: #111828;
-  --card:#161b2a;
-  --ink:#eef3ff;           /* yazılar full açık */
-  --muted:#9fb0c7;
-  --acc1:#7fb8ff;          /* baby blue (dark versiyon) */
-  --acc2:#79e9d3;          /* su yeşili (dark versiyon) */
-  --acc3:#b79cff;          /* baby purple (dark versiyon) */
+  /* Dark (varsayılan) pastel */
+  --bg:#0e1118; --bg2:#111828; --card:#161b2a;
+  --ink:#eef3ff; --muted:#9fb0c7;
+  --acc1:#7fb8ff; --acc2:#79e9d3; --acc3:#b79cff;
 
-  --radius:14px;
-  --gap:12px;
-  --shadow:0 10px 28px rgba(0,0,0,.35);
-
-  /* Boyutlar ↓ (yarı/kompakt) */
-  --card-pad:10px;
-  --title-size:14px;
-  --mini-size:11px;
-  --long-size:12px;
-  --badge-size:11px;
+  --radius:14px; --gap:12px; --shadow:0 10px 28px rgba(0,0,0,.35);
+  --card-pad:10px; --title-size:14px; --mini-size:11px; --badge-size:11px;
 }
 
-/* Genel reset & layout */
+/* Genel */
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:
-    radial-gradient(1000px 700px at 15% -10%, var(--bg2) 0%, var(--bg) 55%),
-    var(--bg);
+  background: radial-gradient(1000px 700px at 15% -10%, var(--bg2) 0%, var(--bg) 55%), var(--bg);
   color:var(--ink);
   font:15px/1.6 system-ui, Inter, Roboto, Arial, sans-serif;
 }
 .wrap{max-width:1000px;margin:24px auto;padding:0 12px 64px}
 header{display:flex;gap:12px;align-items:center;margin:0 0 12px}
-.logo{width:38px;height:38px;border-radius:10px;
-  background:conic-gradient(from 0deg, var(--acc3), var(--acc1), var(--acc2), var(--acc3))}
+.logo{width:38px;height:38px;border-radius:10px;background:conic-gradient(from 0deg, var(--acc3), var(--acc1), var(--acc2), var(--acc3))}
 .hgroup h1{margin:0;font-size:20px}
 .hgroup p{margin:.25rem 0 0;color:var(--muted);font-size:13px}
 
-.panel{
-  background:rgba(22,27,42,.65);
-  border:1px solid rgba(255,255,255,.06);
-  backdrop-filter:blur(6px);
-  border-radius:var(--radius);
-  padding:12px;
-  box-shadow:var(--shadow);
-}
-.controls{
-  display:grid;
-  grid-template-columns:1fr 1fr auto;
-  gap:var(--gap);
-  align-items:end;
-}
+.panel{background:rgba(22,27,42,.65);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
+.controls{display:grid;grid-template-columns:1fr 1fr auto;gap:var(--gap);align-items:end}
 @media(max-width:700px){.controls{grid-template-columns:1fr}}
 label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-select,input{
-  width:100%;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.08);
-  background:#0f1423;
-  color:var(--ink);
-  padding:8px 9px;
-  font:inherit;
-}
+select,input{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0f1423;color:var(--ink);padding:8px 9px;font:inherit}
 .row{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:center}
 
-/* Butonlar pastel degrade */
-.btn{
-  border:0;border-radius:12px;padding:10px 14px;
-  background:linear-gradient(180deg, var(--acc1), var(--acc2));
-  color:#0c0f14;font-weight:700;cursor:pointer;
-  box-shadow:0 6px 18px rgba(127,184,255,.25);
-}
+.btn{border:0;border-radius:12px;padding:10px 14px;background:linear-gradient(180deg, var(--acc1), var(--acc2));color:#0c0f14;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(127,184,255,.25)}
 .btn.small{padding:7px 10px;font-weight:600}
 
-/* GRID — kartlar küçüldü */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-  gap:var(--gap);
-  margin:14px 0;
-}
+/* GRID + Kart */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--gap);margin:14px 0;justify-items:center}
 #board[data-type="celtic"]{grid-template-columns:repeat(5,1fr)}
 @media (max-width:900px){#board[data-type="celtic"]{grid-template-columns:repeat(3,1fr)}}
 #board[data-type="relation"]{grid-template-columns:repeat(3,1fr)}
 
-/* KART */
 .tarot-card{
-  position:relative;
-  aspect-ratio:3/5;
-  border-radius:12px;
-  transform-style:preserve-3d;
-  transition:transform .65s cubic-bezier(.2,.6,.2,1);
-  box-shadow:var(--shadow);
-  cursor:pointer;
-  will-change:transform;
-  max-width: 240px;   /* 🔹 ekledim: kartın genişliğini sınırla */
-   justify-self:center;   /* 🔹 eklendi (tek kart bazında da ortala) */
+  position:relative; aspect-ratio:3/5; border-radius:12px;
+  transform-style:preserve-3d; transition:transform .65s cubic-bezier(.2,.6,.2,1);
+  box-shadow:var(--shadow); cursor:pointer; will-change:transform;
+  width:100%; max-width:120px; justify-self:center; /* küçük */
 }
 .tarot-card.flipped{transform:rotateY(180deg)}
-.tarot-card .face{
-  position:absolute;inset:0;display:grid;place-items:center;
-  backface-visibility:hidden;border-radius:12px;overflow:hidden
-}
+.tarot-card .face{position:absolute;inset:0;display:grid;place-items:center;backface-visibility:hidden;border-radius:12px;overflow:hidden}
 .tarot-card .back{
   background:
     linear-gradient(135deg, rgba(127,184,255,.18), rgba(121,233,211,.12)),
@@ -124,36 +68,22 @@ select,input{
 }
 .tarot-card .front{
   transform:rotateY(180deg);
-  background:#141a2d;
+  background:var(--card);
   padding:var(--card-pad);
   text-align:center;
   border:1px solid rgba(255,255,255,.08);
   position:relative;
 }
-.tarot-card .front img.bg{
-  position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;opacity:.26;
-  filter:contrast(1.05) saturate(1.05) brightness(.9)
-}
-
-/* İç tipografi (küçültüldü) */
+.tarot-card .front img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.26;filter:contrast(1.05) saturate(1.05) brightness(.9)}
 .title{font-weight:800;margin-top:6px;font-size:var(--title-size)}
 .mini{font-size:var(--mini-size);color:var(--muted);margin-top:3px}
-.long{font-size:var(--long-size);margin-top:6px;line-height:1.45;color:var(--ink)}
 
-/* Rozetler küçük */
-.pos-badge,.rev-badge{
-  position:absolute;top:6px;padding:3px 7px;border-radius:9px;
-  font-size:var(--badge-size)
-}
+.pos-badge,.rev-badge{position:absolute;top:6px;padding:3px 7px;border-radius:9px;font-size:var(--badge-size)}
 .pos-badge{left:6px;background:rgba(0,0,0,.45);color:#fff}
 .rev-badge{right:6px;background:rgba(239,71,111,.92);color:#fff;display:none}
 .tarot-card.is-reversed .rev-badge{display:inline-block}
-
-/* Ters kartlarda SADECE görseli çevir (metin düz) */
 .tarot-card.is-reversed .front img.bg{transform:rotate(180deg)}
 
-/* Shuffle animasyonu */
 @keyframes shuffleSpin{0%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}100%{transform:rotate(0)}}
 .shuffle .tarot-card{animation:shuffleSpin .22s ease both}
 
@@ -161,77 +91,37 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .inline{display:flex;align-items:center;gap:8px}
 .muted{color:var(--muted);font-size:12px}
 
-/* ---- LIGHT THEME: sweet pastel (baby blue, sea green, baby purple) ---- */
+/* Light tema */
 [data-theme="light"]{
-  --bg:#f4f7ff;
-  --bg2:#ecf4ff;
-  --card:#ffffff;
-  --ink:#0b0d12;           /* yazılar full koyu */
-  --muted:#4a5a70;
-  --acc1:#B3D8FF;          /* baby blue */
-  --acc2:#B6F2E3;          /* su yeşili */
-  --acc3:#D5C6FF;          /* baby purple */
-
+  --bg:#f4f7ff; --bg2:#ecf4ff; --card:#ffffff; --ink:#0b0d12; --muted:#4a5a70;
+  --acc1:#B3D8FF; --acc2:#B6F2E3; --acc3:#D5C6FF;
   --shadow:0 8px 20px rgba(15,23,42,.08);
 }
 [data-theme="light"] body{
-  background:
-    radial-gradient(1000px 700px at 18% -10%, var(--bg2) 0%, var(--bg) 60%),
-    var(--bg);
+  background: radial-gradient(1000px 700px at 18% -10%, var(--bg2) 0%, var(--bg) 60%), var(--bg);
 }
-[data-theme="light"] .panel{
-  background:#ffffffcc;
-  border:1px solid rgba(15,23,42,.06);
-}
-[data-theme="light"] select,
-[data-theme="light"] input{
-  background:#ffffff;
-  color:var(--ink);
-  border:1px solid rgba(15,23,42,.12);
-}
-[data-theme="light"] .btn{
-  background:linear-gradient(180deg, var(--acc1), var(--acc3));
-  color:#091016;
-  box-shadow:0 6px 16px rgba(181,209,255,.35);
-}
+[data-theme="light"] .panel{background:#ffffffcc;border:1px solid rgba(15,23,42,.06)}
+[data-theme="light"] select, [data-theme="light"] input{background:#ffffff;color:var(--ink);border:1px solid rgba(15,23,42,.12)}
+[data-theme="light"] .btn{background:linear-gradient(180deg, var(--acc1), var(--acc3));color:#091016;box-shadow:0 6px 16px rgba(181,209,255,.35)}
 [data-theme="light"] .tarot-card .back{
   background:
     linear-gradient(135deg, rgba(179,216,255,.45), rgba(214,198,255,.35)),
     repeating-radial-gradient(circle at 50% 38%, #e8efff 0 7px, #dee9ff 7px 14px);
 }
-[data-theme="light"] .tarot-card .front{
-  background:linear-gradient(180deg,#ffffff,#f7f9ff);
-  border:1px solid rgba(15,23,42,.08);
-}
-[data-theme="light"] .pos-badge{
-  background:rgba(9,16,22,.08); color:#091016;
-}
-[data-theme="light"] .rev-badge{
-  background:#ef476f; color:#fff;
-}
-/* Yalnızca dil/tema seçicileri dar tut (renkler temadan gelir) */
-.compact-select{ width:auto; }
+[data-theme="light"] .tarot-card .front{background:linear-gradient(180deg,#ffffff,#f7f9ff);border:1px solid rgba(15,23,42,.08)}
+[data-theme="light"] .pos-badge{background:rgba(9,16,22,.08);color:#091016}
 
-/* İstersen ok ikonunu sadeleştir (opsiyonel) */
-select{ appearance:auto; } /* Safari için: -webkit-appearance:auto; */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-  gap:var(--gap);
-  margin:14px 0;
-  justify-items: center;   /* 🔹 eklendi */
-}
-.tarot-card .front{
-  transform:rotateY(180deg);
-  background: var(--card);     /* 🔹 #141a2d yerine */
-  padding:var(--card-pad);
-  text-align:center;
-  border:1px solid rgba(255,255,255,.08);
-  position:relative;
-}
-.grid{ justify-items:center; }
-.tarot-card{ width:100%; max-width:120px; justify-self:center; }
+/* Uzun yorumlar paneli */
+#longReads h3{margin:0 0 10px;font-size:16px;color:var(--acc1)}
+#longList .item{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+#longList .title{font-weight:700;margin-bottom:4px}
+#longList .body{font-size:14px;line-height:1.55}
+[data-theme="light"] #longList .item{border-color:rgba(15,23,42,.1)}
 
+/* Selectler kompakt */
+.compact-select{width:auto}
+select{appearance:auto}
+@media (max-width:700px){.tarot-card{max-width:100px}}
 </style>
 </head>
 <body>
@@ -239,7 +129,7 @@ select{ appearance:auto; } /* Safari için: -webkit-appearance:auto; */
     <header>
       <div class="logo" aria-hidden="true"></div>
       <div class="hgroup">
-        <h1>Tabirly Tarot v4.3</h1>
+        <h1>Tabirly Tarot v4.4</h1>
         <p>Tek Kart, 3 Kart, Kelt Haçı, İlişki • Seçmeli mod • Paylaş/Görsel • LocalStorage • TR/EN • Tema</p>
       </div>
     </header>
@@ -263,22 +153,22 @@ select{ appearance:auto; } /* Safari için: -webkit-appearance:auto; */
           <button id="deal" class="btn">Kartları Çek</button>
         </div>
       </div>
+
       <div class="row" style="margin-top:10px">
         <label class="inline"><input type="checkbox" id="allowReversed" checked style="accent-color:#ffd166"/> Ters kart</label>
         <label class="inline"><input type="checkbox" id="autoFlip" checked style="accent-color:#ffd166"/> Otomatik flip</label>
         <label class="inline"><input type="checkbox" id="showImages" style="accent-color:#ffd166"/> Kart görselleri</label>
         <label class="inline"><input type="checkbox" id="pickMode" style="accent-color:#ffd166"/> Seçmeli mod</label>
-        <label class="inline">Dil:
-          <select id="lang"  class="compact-select">
-  <option value="tr">Türkçe</option>
-  <option value="en">English</option>
-</select>
 
-     
+        <label class="inline">Dil:
+          <select id="lang" class="compact-select">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
           </select>
         </label>
+
         <label class="inline">Tema:
-          <select id="theme" style="width:auto;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#B3D8FF;color:var(--ink)">
+          <select id="theme" class="compact-select">
             <option value="dark">Koyu</option>
             <option value="light">Açık</option>
           </select>
@@ -303,44 +193,51 @@ select{ appearance:auto; } /* Safari için: -webkit-appearance:auto; */
       <p id="summary">Kartlara tıklayarak çevir. Ayarlardan ters kartı ve otomatik flip’i yönet. Seçmeli mod açıkken, desteden sırasıyla gerekli sayıda kart seç.</p>
     </section>
 
-    <footer><p>© Tabirly — Tarot Tool v4.3</p></footer>
+    <!-- 🔽 Uzun yorumlar buraya gelecek -->
+    <section id="longReads" class="panel" hidden>
+      <h3>Uzun Yorumlar</h3>
+      <div id="longList"></div>
+    </section>
+
+    <footer><p>© Tabirly — Tarot Tool v4.4</p></footer>
   </div>
 
 <script>
-// ---- Tarot veri seti (uzun yorumlu) ----
+/* ---------- Tarot veri seti (uzun yorumlu) ---------- */
 const TAROT=(()=>{const U=(u,r,ul='',rl='')=>({upright:u,reversed:r,longU:ul||u,longR:rl||r});const majors={
-  "The Fool":U("Başlangıç, cesaret, akışa güven","Düşüncesizlik, hazırlıksız risk","Yeni bir sayfa; çocuk merakıyla adım. Korku yerine deneyim ve öğrenme.","Plansız atılımın bedeli olabilir; önce niyetini netle."),
-  "The Magician":U("Niyet, odak, eylem gücü","Dağılan enerji, yanılsama","Kaynaklarını tek bir hedefe hizala; söyle-düşün-yap uyumu.","Hokkabazlık ve dağınık gündem sonuç vermez; odağını topla."),
-  "The High Priestess":U("Sezgi, sır, içe dönüş","Gizlilik, kopukluk","Cevap içerde; sessizlikte bilgi açılır.","Aşırı içine kapanma iletişimi zayıflatır."),
-  "The Empress":U("Bereket, bakım, yaratım","Aşırı koruma, tıkanma","Üret, besle, büyüt; doğa ritmi.","Aşırı sahiplenme yaratımı boğuyor olabilir."),
-  "The Emperor":U("Düzen, yapı, otorite","Katılık, kontrol","Sınır, kural ve strateji; liderlik.","Esneklik eksikliği çatışma doğurur."),
-  "The Hierophant":U("Gelenek, rehberlik","Kör uyum, dogma","Usta-çırak bilgisi; ritüel faydalı.","Sırf gelenek diye tutunma."),
-  "The Lovers":U("Seçim, uyum, bağ","Kararsızlık, uyumsuzluk","Kalp-zihin hizasıyla seçim.","Belirsizlik bağa zarar verir; netleş."),
-  "The Chariot":U("İrade, yön, zafer","Dengesizlik","Tek yöne çek; dizginler sende.","Hız var, denge yoksa savrulursun."),
-  "Strength":U("Sakin güç, sabır","Sabırsızlık","Yumuşak güç, şefkatle hükmet.","Zorlamayı bırak; sabır eksik."),
-  "The Hermit":U("İç arayış","İzolasyon","Yalnızlıkta iç ışık; araştır.","Kopuşu fark et; dünyaya dön."),
-  "Wheel of Fortune":U("Döngü, fırsat","Talihsizlik döngüsü","Zaman döner; kapı açılır.","Aynı döngüye direnme; dersi al."),
-  "Justice":U("Adalet, denge","Haksızlık","Tarafsız muhakeme; sözünde dur.","Eksik veriyle hüküm verme."),
-  "The Hanged Man":U("Bakış açısı değişimi","Tutukluk","Askıda kalış yeni görüş kazandırır.","Kör fedakârlık enerjiyi tüketir."),
-  "Death":U("Bitiş ve dönüşüm","Değişime direnç","Kapanış=doğum; kabuk yenilenir.","Eskiyi bırakma korkusu ilerletmiyor."),
-  "Temperance":U("Denge, ılımlılık","Aşırılık","Harmanla, ölçüyü bul.","Aşırılar seni savuruyor."),
-  "The Devil":U("Bağ, gölge","Kurtuluş","Bağımlılığı gör; sorumluluğu al.","Zinciri fark ettin; adım at."),
-  "The Tower":U("Ani yıkım, uyanış","Geciken kriz","Çürük yapı yıkılır; hakikat kalır.","Ertelenen çöküş daha sert olur."),
-  "The Star":U("Umut, ilham","Şüphe","Yaran iyileşiyor; suya bak.","İnancı tazele; küçük adım."),
-  "The Moon":U("Belirsizlik, sezgi","Yanılsama","Sisli yolda sezgi pusula.","Kuruntuyla gerçeği karıştırma."),
-  "The Sun":U("Netlik, başarı","Aşırı iyimserlik","Çocuk neşesi; görünür başarı.","Ego parlıyor; ekip gölgede kalmasın."),
-  "Judgement":U("Çağrı, yenilenme","Erteleme","Kendini çağır; eski dosyayı kapat.","Korku yüzünden ertelediğin karar."),
-  "The World":U("Tamamlanma","Eksik halka","Döngü biter; yeni sefer.","Son noktayı koy; açık uç kalmasın.")};
-  const SUITS=[{suit:'Cups',up:['Duygu, akış, bağ','İki kişi, uyum','Kutlama, topluluk','Duygusal çekilme','Hayal kırıklığı','Nostalji','Hayaller, seçenekler','Veda, yolculuk','Dilek, tatmin','Duygusal tamamlanma']},{suit:'Pentacles',up:['Fırsat, tohum','Denge, jonglörlük','Ustalık, işbirliği','Tutunma, güvenlik','Yoksunluk, soğuk','Paylaşım, yardım','Sabır, hasat','Ustalık, emek','Öz-değer, konfor','Maddi tamamlanma']},{suit:'Swords',up:['Zihin açıklığı','Kararsızlık','Acı, kırık kalp','Dinlenme, toparlanma','Çatışma','Geçiş, sığınma','Strateji, gizlilik','Sıkışmış his','Endişe','Zihinsel çöküş']},{suit:'Wands',up:['Kıvılcım, ilham','Ufuk planı','Genişleme','Kutlama, temel','Rekabet','Zafer','Savunma','Hız, haber','Direnç','Yük, sorumluluk']}];
-  const courtUp={Cups:['Hassas haberci','Romantik yolculuk','Şefkatli yönetici','Duygusal lider'],Pentacles:['Öğrenci, pratik adım','Güvenilir ilerleyiş','Kaynak yönetimi','Maddi liderlik'],Swords:['Meraklı zihin','Atılgan eylemci','Keskin karar','Mantık lideri'],Wands:['Yaratıcı kıvılcım','Macera ruhu','Karizmatik yönetici','Vizyoner lider']};
-  const reversedHint={Cups:['Aşırı duyarlılık','Kaçışçılık','Manipülasyon','Soğukluk'],Pentacles:['Üşengeçlik','Oyalama','Açgözlülük','İnatçı kontrol'],Swords:['Dedikodu','Düşüncesiz saldırı','Zalimlik','Katı zihin'],Wands:['Yönsüz heves','Dürtüsellik','Tükenmişlik','Tiranlık']};
-  const cards=[];Object.keys(majors).forEach(k=>cards.push({name:k,...majors[k]}));
-  const R=['Ace','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
-  SUITS.forEach(({suit,up})=>{up.forEach((txt,i)=>cards.push({name:`${R[i]} of ${suit}`,upright:txt,reversed:reversedHint[suit][Math.min(i,reversedHint[suit].length-1)],longU:txt,longR:reversedHint[suit][Math.min(i,reversedHint[suit].length-1)]}));['Page','Knight','Queen','King'].forEach((r,i)=>cards.push({name:`${r} of ${suit}`,upright:courtUp[suit][i],reversed:reversedHint[suit][i],longU:courtUp[suit][i],longR:reversedHint[suit][i]}));});
-  const TR={Cups:'Kupa',Pentacles:'Tılsım',Swords:'Kılıç',Wands:'Değnek',Ace:'As',Two:'İki',Three:'Üç',Four:'Dört',Five:'Beş',Six:'Altı',Seven:'Yedi',Eight:'Sekiz',Nine:'Dokuz',Ten:'On',Page:'Uşak',Knight:'Şövalye',Queen:'Kraliçe',King:'Kral','The Fool':'Deli','The Magician':'Büyücü','The High Priestess':'Başrahibe','The Empress':'İmparatoriçe','The Emperor':'İmparator','The Hierophant':'Aziz','The Lovers':'Aşıklar','The Chariot':'Savaş Arabası','Strength':'Güç','The Hermit':'Ermiş','Wheel of Fortune':'Kader Çarkı','Justice':'Adalet','The Hanged Man':'Asılan Adam','Death':'Ölüm','Temperance':'Denge','The Devil':'Şeytan','The Tower':'Kule','The Star':'Yıldız','The Moon':'Ay','The Sun':'Güneş','Judgement':'Mahkeme','The World':'Dünya'};
-  const trName=name=>name.includes(' of ')?(()=>{const [rank,suit]=name.split(' of ');return `${TR[suit]||suit} ${TR[rank]||rank}`;})():TR[name]||name;
-  return {cards,trName};})();
+"The Fool":U("Başlangıç, cesaret, akışa güven","Düşüncesizlik, hazırlıksız risk","Yeni bir sayfa; çocuk merakıyla adım. Korku yerine deneyim ve öğrenme.","Plansız atılımın bedeli olabilir; önce niyetini netle."),
+"The Magician":U("Niyet, odak, eylem gücü","Dağılan enerji, yanılsama","Kaynaklarını tek bir hedefe hizala; söyle-düşün-yap uyumu.","Hokkabazlık ve dağınık gündem sonuç vermez; odağını topla."),
+"The High Priestess":U("Sezgi, sır, içe dönüş","Gizlilik, kopukluk","Cevap içerde; sessizlikte bilgi açılır.","Aşırı içine kapanma iletişimi zayıflatır."),
+"The Empress":U("Bereket, bakım, yaratım","Aşırı koruma, tıkanma","Üret, besle, büyüt; doğa ritmi.","Aşırı sahiplenme yaratımı boğuyor olabilir."),
+"The Emperor":U("Düzen, yapı, otorite","Katılık, kontrol","Sınır, kural ve strateji; liderlik.","Esneklik eksikliği çatışma doğurur."),
+"The Hierophant":U("Gelenek, rehberlik","Kör uyum, dogma","Usta-çırak bilgisi; ritüel faydalı.","Sırf gelenek diye tutunma."),
+"The Lovers":U("Seçim, uyum, bağ","Kararsızlık, uyumsuzluk","Kalp-zihin hizasıyla seçim.","Belirsizlik bağa zarar verir; netleş."),
+"The Chariot":U("İrade, yön, zafer","Dengesizlik","Tek yöne çek; dizginler sende.","Hız var, denge yoksa savrulursun."),
+"Strength":U("Sakin güç, sabır","Sabırsızlık","Yumuşak güç, şefkatle hükmet.","Zorlamayı bırak; sabır eksik."),
+"The Hermit":U("İç arayış","İzolasyon","Yalnızlıkta iç ışık; araştır.","Kopuşu fark et; dünyaya dön."),
+"Wheel of Fortune":U("Döngü, fırsat","Talihsizlik döngüsü","Zaman döner; kapı açılır.","Aynı döngüye direnme; dersi al."),
+"Justice":U("Adalet, denge","Haksızlık","Tarafsız muhakeme; sözünde dur.","Eksik veriyle hüküm verme."),
+"The Hanged Man":U("Bakış açısı değişimi","Tutukluk","Askıda kalış yeni görüş kazandırır.","Kör fedakârlık enerjiyi tüketir."),
+"Death":U("Bitiş ve dönüşüm","Değişime direnç","Kapanış=doğum; kabuk yenilenir.","Eskiyi bırakma korkusu ilerletmiyor."),
+"Temperance":U("Denge, ılımlılık","Aşırılık","Harmanla, ölçüyü bul.","Aşırılar seni savuruyor."),
+"The Devil":U("Bağ, gölge","Kurtuluş","Bağımlılığı gör; sorumluluğu al.","Zinciri fark ettin; adım at."),
+"The Tower":U("Ani yıkım, uyanış","Geciken kriz","Çürük yapı yıkılır; hakikat kalır.","Ertelenen çöküş daha sert olur."),
+"The Star":U("Umut, ilham","Şüphe","Yaran iyileşiyor; suya bak.","İnancı tazele; küçük adım."),
+"The Moon":U("Belirsizlik, sezgi","Yanılsama","Sisli yolda sezgi pusula.","Kuruntuyla gerçeği karıştırma."),
+"The Sun":U("Netlik, başarı","Aşırı iyimserlik","Çocuk neşesi; görünür başarı.","Ego parlıyor; ekip gölgede kalmasın."),
+"Judgement":U("Çağrı, yenilenme","Erteleme","Kendini çağır; eski dosyayı kapat.","Korku yüzünden ertelediğin karar."),
+"The World":U("Tamamlanma","Eksik halka","Döngü biter; yeni sefer.","Son noktayı koy; açık uç kalmasın.")};
+const SUITS=[{suit:'Cups',up:['Duygu, akış, bağ','İki kişi, uyum','Kutlama, topluluk','Duygusal çekilme','Hayal kırıklığı','Nostalji','Hayaller, seçenekler','Veda, yolculuk','Dilek, tatmin','Duygusal tamamlanma']},{suit:'Pentacles',up:['Fırsat, tohum','Denge, jonglörlük','Ustalık, işbirliği','Tutunma, güvenlik','Yoksunluk, soğuk','Paylaşım, yardım','Sabır, hasat','Ustalık, emek','Öz-değer, konfor','Maddi tamamlanma']},{suit:'Swords',up:['Zihin açıklığı','Kararsızlık','Acı, kırık kalp','Dinlenme, toparlanma','Çatışma','Geçiş, sığınma','Strateji, gizlilik','Sıkışmış his','Endişe','Zihinsel çöküş']},{suit:'Wands',up:['Kıvılcım, ilham','Ufuk planı','Genişleme','Kutlama, temel','Rekabet','Zafer','Savunma','Hız, haber','Direnç','Yük, sorumluluk']}];
+const courtUp={Cups:['Hassas haberci','Romantik yolculuk','Şefkatli yönetici','Duygusal lider'],Pentacles:['Öğrenci, pratik adım','Güvenilir ilerleyiş','Kaynak yönetimi','Maddi liderlik'],Swords:['Meraklı zihin','Atılgan eylemci','Keskin karar','Mantık lideri'],Wands:['Yaratıcı kıvılcım','Macera ruhu','Karizmatik yönetici','Vizyoner lider']};
+const reversedHint={Cups:['Aşırı duyarlılık','Kaçışçılık','Manipülasyon','Soğukluk'],Pentacles:['Üşengeçlik','Oyalama','Açgözlülük','İnatçı kontrol'],Swords:['Dedikodu','Düşüncesiz saldırı','Zalimlik','Katı zihin'],Wands:['Yönsüz heves','Dürtüsellik','Tükenmişlik','Tiranlık']};
+const cards=[];Object.keys(majors).forEach(k=>cards.push({name:k,...majors[k]}));
+const R=['Ace','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+SUITS.forEach(({suit,up})=>{up.forEach((txt,i)=>cards.push({name:`${R[i]} of ${suit}`,upright:txt,reversed:reversedHint[suit][Math.min(i,reversedHint[suit].length-1)],longU:txt,longR:reversedHint[suit][Math.min(i,reversedHint[suit].length-1)]}));['Page','Knight','Queen','King'].forEach((r,i)=>cards.push({name:`${r} of ${suit}`,upright:courtUp[suit][i],reversed:reversedHint[suit][i],longU:courtUp[suit][i],longR:reversedHint[suit][i]}));});
+const TR={Cups:'Kupa',Pentacles:'Tılsım',Swords:'Kılıç',Wands:'Değnek',Ace:'As',Two:'İki',Three:'Üç',Four:'Dört',Five:'Beş',Six:'Altı',Seven:'Yedi',Eight:'Sekiz',Nine:'Dokuz',Ten:'On',Page:'Uşak',Knight:'Şövalye',Queen:'Kraliçe',King:'Kral','The Fool':'Deli','The Magician':'Büyücü','The High Priestess':'Başrahibe','The Empress':'İmparatoriçe','The Emperor':'İmparator','The Hierophant':'Aziz','The Lovers':'Aşıklar','The Chariot':'Savaş Arabası','Strength':'Güç','The Hermit':'Ermiş','Wheel of Fortune':'Kader Çarkı','Justice':'Adalet','The Hanged Man':'Asılan Adam','Death':'Ölüm','Temperance':'Denge','The Devil':'Şeytan','The Tower':'Kule','The Star':'Yıldız','The Moon':'Ay','The Sun':'Güneş','Judgement':'Mahkeme','The World':'Dünya'};
+const trName=name=>name.includes(' of ')?(()=>{const [rank,suit]=name.split(' of ');return `${TR[suit]||suit} ${TR[rank]||rank}`;})():TR[name]||name;
+return {cards,trName};})();
 
+/* ---------- App ---------- */
 const POSITIONS={one:["Mesaj"],three:["Geçmiş","Şimdi","Gelecek"],celtic:["Durum (Şimdi)","Engel/Çapraz","Geçmiş Temel","Yakın Gelecek","Bilinç/Hedef","Bilinçaltı/Kök","Öneri/Ben","Çevre/Dış Etki","Umutlar & Korkular","Olası Sonuç"],relation:["Sen","Partner","Bağ/Dinamik","Güçlü Yanlar","Zorluklar","Olası Sonuç"]};
 
 const qs=s=>document.querySelector(s), qsa=s=>Array.from(document.querySelectorAll(s));
@@ -354,15 +251,16 @@ const allowRev=qs('#allowReversed'), autoFlip=qs('#autoFlip'), showImages=qs('#s
 const langSel=qs('#lang'), themeSel=qs('#theme');
 const summary=qs('#summary'), explain=qs('#explain');
 const sharebar=qs('#sharebar'), copyBtn=qs('#copyLink'), waBtn=qs('#shareWa'), xBtn=qs('#shareX'), savePng=qs('#savePng');
+const longSec=qs('#longReads'), longBox=qs('#longList');
 
-const KEY='tabirly_tarot_last_v43';
+const KEY='tabirly_tarot_last_v44';
 const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
 
 function t(name){return langSel.value==='tr'?TAROT.trName(name):name}
-function m(card){return (card.reversed?card.longR:card.longU)}   // uzun yorum
-function s(card){return (card.reversed?card.reversed:card.upright)} // kısa özet
+function longText(card){return (card.reversed?card.longR:card.longU)}
+function shortText(card){return (card.reversed?card.reversed:card.upright)}
 
 function getState(){return{type:spreadSel.value,question:qInput.value.trim(),allowReversed:!!allowRev.checked,autoFlip:!!autoFlip.checked,showImages:!!showImages.checked,pickMode:!!pickMode.checked,lang:langSel.value,theme:themeSel.value,cards:LAST_PICKS.map((p,i)=>({name:p.name,reversed:p.reversed,pos:i}))}};
 function saveLocal(st){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
@@ -374,82 +272,129 @@ function renderCard(card,type,idx){
   const back=el('div','face back'); back.innerHTML='<span style="color:#ffd166;font-weight:800">TABIRLY</span>';
   const front=el('div','face front');
   const pos=POSITIONS[type][idx]||`Kart ${idx+1}`;
-  const title=t(card.name); const short=s(card); const long=m(card);
+  const title=t(card.name); const short=shortText(card);
   if(showImages && showImages.checked){ const img=new Image(); img.className='bg'; img.alt=''; img.loading='lazy'; img.src=`img/${slug(card.name)}.jpg`; img.onerror=()=>img.remove(); front.appendChild(img); }
   front.innerHTML+=`
     <div class="pos-badge">${pos}</div>
     <div class="rev-badge">${langSel.value==='tr'?'TERS':'REV'}</div>
     <div class="title">${title}</div>
-    <div class="mini">${short}</div>
-    <div class="long">${long}</div>`;
+    <div class="mini">${short}</div>`;
   c.append(back,front);
   c.addEventListener('click',()=>c.classList.toggle('flipped'));
   c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.classList.toggle('flipped');}});
   return c;
 }
 
-function renderDeck(){ deck.innerHTML=''; deck.hidden=!pickMode.checked; if(deck.hidden) return; const type=spreadSel.value, need=(POSITIONS[type]||['Mesaj']).length; let picked=0; LAST_PICKS=[]; const d=TAROT.cards.slice(); shuffle(d);
-  d.forEach(card=>{ const c=el('div','tarot-card'); const back=el('div','face back'); const front=el('div','face front'); front.innerHTML='<div class="title">Seçildi / Picked</div>'; c.append(back,front); c.addEventListener('click',()=>{ if(c.classList.contains('chosen')||picked>=need) return; const reversed=allowRev.checked?(Math.random()<.5):false; LAST_PICKS.push({...card,reversed}); picked++; c.classList.add('chosen','flipped'); if(picked===need) drawFromPicks(); }); deck.appendChild(c); });
+function renderDeck(){
+  deck.innerHTML=''; deck.hidden=!pickMode.checked; if(deck.hidden) return;
+  const type=spreadSel.value, need=(POSITIONS[type]||['Mesaj']).length; let picked=0; LAST_PICKS=[]; const d=TAROT.cards.slice(); shuffle(d);
+  d.forEach(card=>{
+    const c=el('div','tarot-card');
+    const back=el('div','face back'); const front=el('div','face front');
+    front.innerHTML='<div class="title">Seçildi / Picked</div>';
+    c.append(back,front);
+    c.addEventListener('click',()=>{
+      if(c.classList.contains('chosen')||picked>=need) return;
+      const reversed=allowRev.checked?(Math.random()<.5):false;
+      LAST_PICKS.push({...card,reversed}); picked++; c.classList.add('chosen','flipped');
+      if(picked===need) drawFromPicks();
+    });
+    deck.appendChild(c);
+  });
 }
-function drawFromPicks(){ const type=spreadSel.value; board.innerHTML=''; board.setAttribute('data-type',type); LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) ); afterDeal(type); }
+function drawFromPicks(){
+  const type=spreadSel.value;
+  board.innerHTML=''; board.setAttribute('data-type',type);
+  LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) );
+  afterDeal(type);
+}
 
-function deal(){ board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250); board.setAttribute('aria-busy','true'); board.innerHTML=''; const type=spreadSel.value; board.setAttribute('data-type',type); const need=(POSITIONS[type]||['Mesaj']).length; if(pickMode.checked){ renderDeck(); summary.textContent= (langSel.value==='tr'?`Seçmeli mod: ${need} kart seç.`:`Pick mode: choose ${need} cards.`); explain.hidden=false; board.removeAttribute('aria-busy'); return; } const d=TAROT.cards.slice(); shuffle(d); LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false})); LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) ); afterDeal(type); }
+function deal(){
+  board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250);
+  board.setAttribute('aria-busy','true'); board.innerHTML='';
+  const type=spreadSel.value; board.setAttribute('data-type',type);
+  const need=(POSITIONS[type]||['Mesaj']).length;
+  if(pickMode.checked){
+    renderDeck();
+    summary.textContent=(langSel.value==='tr'?`Seçmeli mod: ${need} kart seç.`:`Pick mode: choose ${need} cards.`);
+    explain.hidden=false; board.removeAttribute('aria-busy'); return;
+  }
+  const d=TAROT.cards.slice(); shuffle(d);
+  LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false}));
+  LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) );
+  afterDeal(type);
+}
+
+function fillLongReads(type){
+  longBox.innerHTML='';
+  LAST_PICKS.forEach((card,i)=>{
+    const div=document.createElement('div');
+    div.className='item';
+    const pos=POSITIONS[type][i]||`Kart ${i+1}`;
+    div.innerHTML = `<div class="title">${pos} — ${t(card.name)}</div>
+                     <div class="body">${longText(card)}</div>`;
+    longBox.appendChild(div);
+  });
+  longSec.hidden=false;
+}
 
 function afterDeal(type){
-  const qtxt = qInput.value.trim();
-  const mapTR = {one:'Tek Kart hazır.',three:'3 Kart hazır.',celtic:'Kelt Haçı (10) hazır.',relation:'İlişki (6) hazır.'};
-  const mapEN = {one:'One Card ready.',three:'3-Card ready.',celtic:'Celtic Cross ready.',relation:'Relationship spread ready.'};
-  let txt = (langSel.value==='tr' ? mapTR[type] : mapEN[type]) || '';
-  if (qtxt) txt += (langSel.value==='tr' ? ` Soru: “${qtxt}”.` : ` Question: “${qtxt}”.`);
-  summary.textContent = txt + (langSel.value==='tr' ? ' Kartlara tıklayarak çevir.' : ' Click cards to flip.');
-  explain.hidden = false;
-  board.removeAttribute('aria-busy');
+  const qtxt=qInput.value.trim();
+  const mapTR={one:'Tek Kart hazır.',three:'3 Kart hazır.',celtic:'Kelt Haçı (10) hazır.',relation:'İlişki (6) hazır.'};
+  const mapEN={one:'One Card ready.',three:'3-Card ready.',celtic:'Celtic Cross ready.',relation:'Relationship spread ready.'};
+  let txt=(langSel.value==='tr'?mapTR[type]:mapEN[type])||'';
+  if(qtxt) txt += (langSel.value==='tr'?` Soru: “${qtxt}”.`:` Question: “${qtxt}”.`);
+  summary.textContent = txt + (langSel.value==='tr'?' Kartlara tıklayarak çevir.':' Click cards to flip.');
+  explain.hidden=false; board.removeAttribute('aria-busy');
 
-  // 🔁 Otomatik flip – #board içindeki kartları sırayla, atlamasız
-  if (autoFlip && autoFlip.checked) {
-    const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
-    let i = 0;
-    function tick() {
-      if (i >= cards.length) return;
-      const c = cards[i++];
-      void c.offsetHeight;           // reflow
-      c.classList.add('flipped');
-      setTimeout(tick, 150);
-    }
-    requestAnimationFrame(() => setTimeout(tick, 120));
+  // Uzun yorumlar altta
+  fillLongReads(type);
+
+  // Otomatik flip
+  if(autoFlip && autoFlip.checked){
+    const cards=Array.from(document.querySelectorAll('#board .tarot-card'));
+    let i=0; function tick(){ if(i>=cards.length) return; const c=cards[i++]; void c.offsetHeight; c.classList.add('flipped'); setTimeout(tick,150); }
+    requestAnimationFrame(()=>setTimeout(tick,120));
   }
 
-  // 🔗 Paylaşım + Kaydet
-  const st = getState();
-  saveLocal(st);
-  const url = shareURL(st);
-  sharebar.hidden = false;
-
-  copyBtn.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      copyBtn.textContent = (langSel.value==='tr' ? 'Kopyalandı' : 'Copied');
-      setTimeout(() => copyBtn.textContent = (langSel.value==='tr' ? 'Linki kopyala' : 'Copy link'), 1200);
-    } catch(e){ alert(url); }
-  };
-  waBtn.onclick = () => {
-    const t = encodeURIComponent(`${langSel.value==='tr'?'Tarot açılımım:':'My tarot spread:'}\n${url}`);
-    window.open(`https://wa.me/?text=${t}`, '_blank');
-  };
-  xBtn.onclick = () => {
-    const t = encodeURIComponent(`Tabirly Tarot — ${url}`);
-    window.open(`https://twitter.com/intent/tweet?text=${t}`, '_blank');
-  };
+  // Kaydet & paylaş
+  const st=getState(); saveLocal(st);
+  const url=shareURL(st); sharebar.hidden=false;
+  copyBtn.onclick=async()=>{ try{ await navigator.clipboard.writeText(url); copyBtn.textContent=(langSel.value==='tr'?'Kopyalandı':'Copied'); setTimeout(()=>copyBtn.textContent=(langSel.value==='tr'?'Linki kopyala':'Copy link'),1200);}catch(e){ alert(url);} };
+  waBtn.onclick=()=>{ const t=encodeURIComponent(`${langSel.value==='tr'?'Tarot açılımım:':'My tarot spread:'}\n${url}`); window.open(`https://wa.me/?text=${t}`,'_blank'); };
+  xBtn.onclick =()=>{ const t=encodeURIComponent(`Tabirly Tarot — ${url}`); window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank'); };
 }
 
 savePng?.addEventListener('click',async()=>{ try{ const node=board; const canvas=await html2canvas(node,{backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12',useCORS:true,scale:2}); const link=document.createElement('a'); link.download='tabirly-tarot.png'; link.href=canvas.toDataURL('image/png'); link.click(); }catch(e){ alert('Görsel oluşturulamadı :(');} });
 
 function applyTheme(){ document.documentElement.setAttribute('data-theme', themeSel.value); saveLocal(getState()); }
-themeSel.addEventListener('change',applyTheme); langSel.addEventListener('change',()=>{ const st=getState(); saveLocal(st); if(LAST_PICKS.length){ drawFromPicks(); }});
+themeSel.addEventListener('change',applyTheme);
+langSel.addEventListener('change',()=>{ const st=getState(); saveLocal(st); if(LAST_PICKS.length){ drawFromPicks(); fillLongReads(spreadSel.value); }});
 
-dealBtn.addEventListener('click',deal); pickMode.addEventListener('change',()=>{ if(pickMode.checked){ renderDeck(); } else { deck.hidden=true; }});
+dealBtn.addEventListener('click',deal);
+pickMode.addEventListener('change',()=>{ if(pickMode.checked){ renderDeck(); } else { deck.hidden=true; }});
 
-(function init(){ const hash=new URLSearchParams(location.hash.slice(1)); let st=null; if(hash.get('s')){ try{ st=decodeState(hash.get('s')); }catch(e){} } if(!st){ st=loadLocal(); } if(st){ spreadSel.value=st.type||'one'; qInput.value=st.question||''; allowRev.checked=!!st.allowReversed; autoFlip.checked=!!st.autoFlip; showImages.checked=!!st.showImages; pickMode.checked=!!st.pickMode; langSel.value=st.lang||'tr'; themeSel.value=st.theme||'dark'; applyTheme(); } if(st && st.cards && st.cards.length){ board.setAttribute('data-type',st.type); LAST_PICKS=st.cards.map(k=>{const base=TAROT.cards.find(x=>x.name===k.name)||TAROT.cards[0]; return {...base,reversed:!!k.reversed};}); LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card, st.type, i)) ); let txt=(langSel.value==='tr'?(st.type==='three'?'3 Kart (yükledi).':st.type==='celtic'?'Kelt Haçı (yükledi).':st.type==='relation'?'İlişki (yükledi).':'Tek Kart (yükledi).'):(st.type==='three'?'3-Card (loaded).':st.type==='celtic'?'Celtic Cross (loaded).':st.type==='relation'?'Relationship (loaded).':'One Card (loaded).')); if(st.question) txt+= (langSel.value==='tr'?` Soru: “${st.question}”.`:` Question: “${st.question}”.`); summary.textContent=txt+(langSel.value==='tr'?' Kartlara tıklayarak çevir.':' Click cards to flip.'); explain.hidden=false; sharebar.hidden=false; if(pickMode.checked) renderDeck(); }
+(function init(){
+  const hash=new URLSearchParams(location.hash.slice(1)); let st=null;
+  if(hash.get('s')){ try{ st=decodeState(hash.get('s')); }catch(e){} }
+  if(!st){ st=loadLocal(); }
+  if(st){
+    spreadSel.value=st.type||'one'; qInput.value=st.question||'';
+    allowRev.checked=!!st.allowReversed; autoFlip.checked=!!st.autoFlip;
+    showImages.checked=!!st.showImages; pickMode.checked=!!st.pickMode;
+    langSel.value=st.lang||'tr'; themeSel.value=st.theme||'dark'; applyTheme();
+  }
+  if(st && st.cards && st.cards.length){
+    board.setAttribute('data-type',st.type);
+    LAST_PICKS=st.cards.map(k=>{const base=TAROT.cards.find(x=>x.name===k.name)||TAROT.cards[0]; return {...base,reversed:!!k.reversed};});
+    LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card, st.type, i)) );
+    let txt=(langSel.value==='tr'?(st.type==='three'?'3 Kart (yükledi).':st.type==='celtic'?'Kelt Haçı (yükledi).':st.type==='relation'?'İlişki (yükledi).':'Tek Kart (yükledi).'):(st.type==='three'?'3-Card (loaded).':st.type==='celtic'?'Celtic Cross (loaded).':st.type==='relation'?'Relationship (loaded).':'One Card (loaded).'));
+    if(st.question) txt += (langSel.value==='tr'?` Soru: “${st.question}”.`:` Question: “${st.question}”.`);
+    summary.textContent=txt+(langSel.value==='tr'?' Kartlara tıklayarak çevir.':' Click cards to flip.');
+    explain.hidden=false; sharebar.hidden=false;
+    fillLongReads(st.type);
+    if(pickMode.checked) renderDeck();
+  }
 })();
 </script>
 </body>

@@ -120,6 +120,22 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* PICK MODE (deck only) */
 .tarot-card.in-deck .front{ display:none; }
 .tarot-card.in-deck .back{ position:relative; }
+  /* ==== SIK PAKET TAROT ==== */
+:root { --gap: 0px; }                     /* grid boşluğu yok */
+.grid{
+  gap: 0 !important;
+  margin: 0 !important;
+  justify-items: stretch;
+}
+.tarot-card{
+  width: 100%;
+  max-width: none;                         /* 100px sınırı kalkar */
+  border-radius: 0 !important;             /* kenarlar birleşsin */
+  box-shadow: none !important;             /* gölge boşluğu engellemesin */
+}
+.tarot-card .front,
+.tarot-card .back{ border-radius: 0 !important; }
+.tarot-card .front{ border: none !important; }
 </style>
 </head>
 <body>

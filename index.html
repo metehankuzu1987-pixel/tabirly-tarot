@@ -87,7 +87,6 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* Light theme */
 [data-theme="light"]{
   --bg:#f4f7ff; --bg2:#ecf4ff; --card:#ffffff; --ink:#0b0d12; --muted:#4a5a70;
-  --acc1:#B3D8FF; --acc2:#B6F2E3; --acc3:#D5C6FF;
   --shadow:0 8px 20px rgba(15,23,42,.08);
 }
 [data-theme="light"] body{
@@ -104,7 +103,7 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 [data-theme="light"] .tarot-card .front{background:linear-gradient(180deg,#ffffff,#f7f9ff);border:1px solid rgba(15,23,42,.08)}
 [data-theme="light"] .pos-badge{background:rgba(9,16,22,.08);color:#091016}
 
-/* --- Image layering: image fills card, sits above background --- */
+/* Image layering */
 .tarot-card .front{ position:relative; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
 .tarot-card.has-img .front{ background:transparent !important; }
 .tarot-card .front img.bg{
@@ -118,15 +117,14 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 
 @media (max-width:700px){.tarot-card{max-width:100px}}
 
-/* ---- PICK MODE (DECK) ---- */
-.tarot-card.in-deck .front{ display:none; }             /* deck cards never flip/show front */
+/* PICK MODE (deck only) */
+.tarot-card.in-deck .front{ display:none; }
 .tarot-card.in-deck .back{ position:relative; }
 .tarot-card.in-deck .back::after{
   content:'Picked';
   position:absolute; top:6px; left:6px;
   padding:3px 7px; border-radius:9px; font-size:11px;
-  background:rgba(0,0,0,.45); color:#fff;
-  display:none;
+  background:rgba(0,0,0,.45); color:#fff; display:none;
 }
 .tarot-card.in-deck.selected .back::after{ display:inline-block; }
 </style>
@@ -184,8 +182,9 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
       </div>
     </section>
 
-    <div id="pickCounter" class="muted" style="margin:6px 0 6px; display:none;"></div>
-<section id="deck" class="grid" hidden aria-label="Deste"></section>
+    <!-- Counter + Deck -->
+    <div id="pickCounter" class="muted" style="margin:6px 0; display:none;"></div>
+    <section id="deck" class="grid" hidden aria-label="Deck"></section>
 
     <section id="board" class="grid" aria-live="polite" aria-busy="false"></section>
 
@@ -272,8 +271,9 @@ const themeSel=qs('#theme');
 const summary=qs('#summary'), explain=qs('#explain');
 const sharebar=qs('#sharebar'), copyBtn=qs('#copyLink'), waBtn=qs('#shareWa'), xBtn=qs('#shareX'), savePng=qs('#savePng');
 const longSec=qs('#longReads'), longBox=qs('#longList');
+const pickCounterEl=document.getElementById('pickCounter');
 
-const KEY='tabirly_tarot_en_v2';
+const KEY='tabirly_tarot_en_v3';
 const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
@@ -291,8 +291,14 @@ function getState(){return{
 };}
 function saveLocal(st){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
 function loadLocal(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null}}
-
 function shareURL(st){ const s=encodeState(st); const base=location.href.split('#')[0].split('?')[0]; return `${base}#s=${s}`; }
+
+/* ---- Pick counter ---- */
+function updatePickCounter(picked, need){
+  if(!pickMode.checked){ pickCounterEl.style.display='none'; return; }
+  pickCounterEl.style.display='block';
+  pickCounterEl.textContent = `Picked ${picked}/${need}`;
+}
 
 function renderCard(card,type,idx){
   const c=el('div','tarot-card'); 
@@ -330,24 +336,22 @@ function renderCard(card,type,idx){
 function renderDeck(){
   deck.innerHTML='';
   deck.hidden = !pickMode.checked;
-  if (deck.hidden) return;
+  if (deck.hidden) { pickCounterEl.style.display='none'; return; }
 
   const type = spreadSel.value;
   const need = getPositions(type).length;
 
   let picked = 0;
-  updatePickCounter(picked, need);
-  
-
   LAST_PICKS = [];
+  updatePickCounter(picked, need);
 
   const d = TAROT.cards.slice();
   shuffle(d);
 
   d.forEach(card=>{
-    const c = el('div','tarot-card in-deck');  // deck card (back only)
+    const c = el('div','tarot-card in-deck');
     const back = el('div','face back');
-    const front = el('div','face front');      // exists but hidden by CSS
+    const front = el('div','face front');  // hidden via CSS
     c.append(back, front);
 
     c.addEventListener('click', ()=>{
@@ -355,8 +359,12 @@ function renderDeck(){
       const reversed = allowRev.checked ? (Math.random() < .5) : false;
       LAST_PICKS.push({...card, reversed});
       picked++;
-      c.classList.add('selected');             // shows "Picked" badge
-      if (picked === need) drawFromPicks();    // enough → draw board
+      c.classList.add('selected');
+      updatePickCounter(picked, need);
+      if (picked === need){
+        pickCounterEl.style.display='none';
+        drawFromPicks();
+      }
     });
 
     deck.appendChild(c);
@@ -377,11 +385,10 @@ function deal(){
 
   if (pickMode.checked){
     renderDeck();
-    updatePickCounter(0, getPositions(type).length);
     const need = getPositions(type).length;
     summary.textContent=`Pick mode: choose ${need} cards.`;
     explain.hidden=false; board.removeAttribute('aria-busy');
-    return; // skip normal dealing
+    return;
   }
 
   const need=getPositions(type).length;
@@ -441,10 +448,10 @@ savePng?.addEventListener('click',async()=>{
 function applyTheme(){ document.documentElement.setAttribute('data-theme', themeSel.value); saveLocal(getState()); }
 themeSel.addEventListener('change',applyTheme);
 
-/* keep deck reactive */
+/* reactive deck */
 pickMode.addEventListener('change',()=>{ 
   if (pickMode.checked){ board.innerHTML=''; renderDeck(); } 
-  else { deck.hidden=true; } 
+  else { deck.hidden=true; pickCounterEl.style.display='none'; } 
 });
 spreadSel.addEventListener('change',()=>{ if (pickMode.checked) renderDeck(); });
 
@@ -460,7 +467,7 @@ dealBtn.addEventListener('click',deal);
     showImages.checked=!!st.showImages; pickMode.checked=!!st.pickMode;
     themeSel.value=st.theme||'dark'; applyTheme();
   }
-  if(pickMode.checked) renderDeck(); // show deck immediately if toggled on
+  if(pickMode.checked) renderDeck();
   if(st && st.cards && st.cards.length){
     board.setAttribute('data-type',st.type);
     LAST_PICKS=st.cards.map(k=>{const base=TAROT.cards.find(x=>x.name===k.name)||TAROT.cards[0]; return {...base,reversed:!!k.reversed};});

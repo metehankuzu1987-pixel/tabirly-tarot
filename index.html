@@ -151,25 +151,6 @@ select{appearance:auto}
   position:relative;
   z-index:1;
 }
-  /* Görsel eklendiğinde kart ön yüz zeminini şeffaf yap */
-.tarot-card.has-img .front{
-  background: transparent;                 /* beyaz taban görünmesin */
-}
-
-/* Görseli gerçekten en üste al; metin ondan da üstte kalsın */
-.tarot-card .front{ position:relative; }
-.tarot-card .front img.bg{
-  position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; object-position:center;
-  opacity:.42; pointer-events:none;
-  z-index:1;                                /* 0 → 1 */
-}
-.tarot-card .front > :not(img){ 
-  position:relative; z-index:2;             /* metin/rozetler img'nin üstünde */
-}
-
-/* (İsteğe bağlı) Light temada azıcık kıs */
-[data-theme="light"] .tarot-card .front img.bg{ opacity:.35; }
 </style>
 </head>
 <body>
@@ -327,32 +308,41 @@ function shareURL(st){
 
 // 🔧 innerHTML yerine DOM tabanlı render — görsel kaybolmaz
 function renderCard(card,type,idx){
-  const c = el('div','tarot-card');
-  if(card.reversed) c.classList.add('is-reversed');
+  const c=el('div','tarot-card'); 
+  if(card.reversed) c.classList.add('is-reversed'); 
+  c.setAttribute('role','button'); 
+  c.tabIndex=0;
 
-  const back  = el('div','face back');
-  back.innerHTML = "<span style='color:#ffd166;font-weight:800'>TABIRLY</span>";
+  const back=el('div','face back'); 
+  back.innerHTML='<span style="color:#ffd166;font-weight:800">TABIRLY</span>';
 
-  const front = el('div','face front');
+  const front=el('div','face front');
+  const pos=POSITIONS[type][idx]||`Kart ${idx+1}`;
+  const title=t(card.name); 
+  const short=shortText(card);
 
   if(showImages && showImages.checked){
-    const img = new Image();
-    img.className = 'bg';
-    img.alt = '';
-    img.loading = 'eager';
-    img.decoding = 'async';
-    img.src = asset(`img/${slug(card.name)}.jpg`);
-    img.onerror = () => img.remove();
+    const img=new Image();
+    img.className='bg';
+    img.alt='';
+    img.loading='eager';     // 'lazy' yerine 'eager'
+    img.decoding='async';
+    img.src=asset(`img/${slug(card.name)}.jpg`);
+    img.onerror=()=>img.remove();
     front.appendChild(img);
-    c.classList.add('has-img');       // 🔑 şeffaf zemin + üst katman
   }
 
-  // ... (pos-badge / rev-badge / title / mini ekleme kısmın aynı)
-  // front.appendChild(...) ...
-  c.append(back, front);
-  // ... (eventler aynı)
+  const posEl=el('div','pos-badge'); posEl.textContent=pos; front.appendChild(posEl);
+  const revEl=el('div','rev-badge'); revEl.textContent=(langSel.value==='tr'?'TERS':'REV'); front.appendChild(revEl);
+  const ttlEl=el('div','title'); ttlEl.textContent=title; front.appendChild(ttlEl);
+  const miniEl=el('div','mini'); miniEl.textContent=short; front.appendChild(miniEl);
+
+  c.append(back,front);
+  c.addEventListener('click',()=>c.classList.toggle('flipped'));
+  c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.classList.toggle('flipped');}});
   return c;
 }
+
 function renderDeck(){
   deck.innerHTML=''; deck.hidden=!pickMode.checked; if(deck.hidden) return;
   const type=spreadSel.value, need=(POSITIONS[type]||['Mesaj']).length; let picked=0; LAST_PICKS=[]; const d=TAROT.cards.slice(); shuffle(d);

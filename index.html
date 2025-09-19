@@ -109,7 +109,8 @@ select,input{
   box-shadow:var(--shadow);
   cursor:pointer;
   will-change:transform;
-  max-width: 120px;   /* 🔹 ekledim: kartın genişliğini sınırla */
+  max-width: 240px;   /* 🔹 ekledim: kartın genişliğini sınırla */
+   justify-self:center;   /* 🔹 eklendi (tek kart bazında da ortala) */
 }
 .tarot-card.flipped{transform:rotateY(180deg)}
 .tarot-card .face{
@@ -213,6 +214,13 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 
 /* İstersen ok ikonunu sadeleştir (opsiyonel) */
 select{ appearance:auto; } /* Safari için: -webkit-appearance:auto; */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:var(--gap);
+  margin:14px 0;
+  justify-items: center;   /* 🔹 eklendi */
+}
 
 </style>
 </head>

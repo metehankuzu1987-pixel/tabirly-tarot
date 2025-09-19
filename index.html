@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tabirly | Tarot Tool v4.1</title>
+<title>Tabirly | Tarot Tool v4.3</title>
 <meta name="description" content="Tabirly tarot açılımları: Tek Kart, 3 Kart, Kelt Haçı, İlişki Açılımı. Seçmeli mod, paylaşım, localStorage, görsel indir, TR/EN, tema." />
 <meta property="og:title" content="Tabirly | Tarot Tool" />
 <meta property="og:description" content="Tek Kart, 3 Kart, Kelt Haçı, İlişki açılımı—sonucu link ve görsel olarak paylaş." />
@@ -41,12 +41,13 @@
   .tarot-card .back{background:repeating-radial-gradient(circle at 50% 38%, #222a44 0 8px, #1a2240 8px 16px)}
   .tarot-card .front{transform:rotateY(180deg);background:#141a2d;padding:12px;text-align:center;border:1px solid rgba(255,255,255,.08);position:relative}
   .tarot-card .front img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.28;filter:contrast(1.05) saturate(1.1) brightness(.9)}
-  .tarot-card .front .title,.tarot-card .front .mini,.pos-badge,.rev-badge{position:relative;z-index:2}
+  .tarot-card .front .title,.tarot-card .front .mini,.tarot-card .front .long,.pos-badge,.rev-badge{position:relative;z-index:2}
   .pos-badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.5);padding:4px 8px;border-radius:10px;font-size:12px}
   .rev-badge{position:absolute;top:6px;right:6px;background:rgba(239,71,111,.92);color:#fff;padding:4px 8px;border-radius:10px;font-size:12px;display:none}
-  .tarot-card.is-reversed .rev-badge{display:block}
+  .tarot-card.is-reversed .rev-badge{display:inline-block}
   .title{font-weight:800;margin-top:8px}
-  .mini{font-size:12px;color:var(--muted)}
+  .mini{font-size:12px;color:var(--muted);margin-top:4px}
+  .long{font-size:13px;margin-top:8px;line-height:1.5;color:var(--ink)}
 
   /* Shuffle animasyonu */
   @keyframes shuffleSpin{0%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}100%{transform:rotate(0)}}
@@ -58,10 +59,11 @@
 
   [data-theme="light"]{--bg:#f6f7fb; --card:#ffffff; --ink:#0b0d12; --muted:#5b657a}
   [data-theme="light"] body{background:linear-gradient(180deg,#eef2ff,#f6f7fb)}
+
   /* Sadece görseli ters çevir, metin düz kalsın */
-.tarot-card.is-reversed .front img.bg { transform: rotate(180deg); }
-.tarot-card .rev-badge{display:none}
-.tarot-card.is-reversed .rev-badge{display:inline-block}
+  .tarot-card.is-reversed .front img.bg { transform: rotate(180deg); }
+  .tarot-card .rev-badge{display:none}
+  .tarot-card.is-reversed .rev-badge{display:inline-block}
 </style>
 </head>
 <body>
@@ -69,7 +71,7 @@
     <header>
       <div class="logo" aria-hidden="true"></div>
       <div class="hgroup">
-        <h1>Tabirly Tarot v4.1</h1>
+        <h1>Tabirly Tarot v4.3</h1>
         <p>Tek Kart, 3 Kart, Kelt Haçı, İlişki • Seçmeli mod • Paylaş/Görsel • LocalStorage • TR/EN • Tema</p>
       </div>
     </header>
@@ -130,7 +132,7 @@
       <p id="summary">Kartlara tıklayarak çevir. Ayarlardan ters kartı ve otomatik flip’i yönet. Seçmeli mod açıkken, desteden sırasıyla gerekli sayıda kart seç.</p>
     </section>
 
-    <footer><p>© Tabirly — Tarot Tool v4.1</p></footer>
+    <footer><p>© Tabirly — Tarot Tool v4.3</p></footer>
   </div>
 
 <script>
@@ -182,13 +184,14 @@ const langSel=qs('#lang'), themeSel=qs('#theme');
 const summary=qs('#summary'), explain=qs('#explain');
 const sharebar=qs('#sharebar'), copyBtn=qs('#copyLink'), waBtn=qs('#shareWa'), xBtn=qs('#shareX'), savePng=qs('#savePng');
 
-const KEY='tabirly_tarot_last_v41';
+const KEY='tabirly_tarot_last_v43';
 const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
 
 function t(name){return langSel.value==='tr'?TAROT.trName(name):name}
-function m(card){return (card.reversed?card.longR:card.longU)}
+function m(card){return (card.reversed?card.longR:card.longU)}   // uzun yorum
+function s(card){return (card.reversed?card.reversed:card.upright)} // kısa özet
 
 function getState(){return{type:spreadSel.value,question:qInput.value.trim(),allowReversed:!!allowRev.checked,autoFlip:!!autoFlip.checked,showImages:!!showImages.checked,pickMode:!!pickMode.checked,lang:langSel.value,theme:themeSel.value,cards:LAST_PICKS.map((p,i)=>({name:p.name,reversed:p.reversed,pos:i}))}};
 function saveLocal(st){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
@@ -200,10 +203,17 @@ function renderCard(card,type,idx){
   const back=el('div','face back'); back.innerHTML='<span style="color:#ffd166;font-weight:800">TABIRLY</span>';
   const front=el('div','face front');
   const pos=POSITIONS[type][idx]||`Kart ${idx+1}`;
-  const title=t(card.name); const meaning=m(card);
+  const title=t(card.name); const short=s(card); const long=m(card);
   if(showImages && showImages.checked){ const img=new Image(); img.className='bg'; img.alt=''; img.loading='lazy'; img.src=`img/${slug(card.name)}.jpg`; img.onerror=()=>img.remove(); front.appendChild(img); }
-  front.innerHTML+=`<div class="pos-badge">${pos}</div><div class="rev-badge">${langSel.value==='tr'?'TERS':'REV'}</div><div class="title">${title}</div><div class="mini">${meaning}</div>`;
-  c.append(back,front); c.addEventListener('click',()=>c.classList.toggle('flipped')); c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.classList.toggle('flipped');}});
+  front.innerHTML+=`
+    <div class="pos-badge">${pos}</div>
+    <div class="rev-badge">${langSel.value==='tr'?'TERS':'REV'}</div>
+    <div class="title">${title}</div>
+    <div class="mini">${short}</div>
+    <div class="long">${long}</div>`;
+  c.append(back,front);
+  c.addEventListener('click',()=>c.classList.toggle('flipped'));
+  c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.classList.toggle('flipped');}});
   return c;
 }
 
@@ -260,8 +270,6 @@ function afterDeal(type){
     window.open(`https://twitter.com/intent/tweet?text=${t}`, '_blank');
   };
 }
-
-
 
 savePng?.addEventListener('click',async()=>{ try{ const node=board; const canvas=await html2canvas(node,{backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12',useCORS:true,scale:2}); const link=document.createElement('a'); link.download='tabirly-tarot.png'; link.href=canvas.toDataURL('image/png'); link.click(); }catch(e){ alert('Görsel oluşturulamadı :(');} });
 

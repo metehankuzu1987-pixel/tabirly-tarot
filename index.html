@@ -126,27 +126,6 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
   padding:3px 7px; border-radius:9px; font-size:11px;
   background:rgba(0,0,0,.45); color:#fff; display:none;
 }
-.tarot-card.in-deck.selected .back::after{ display:inline-block; }
-  /* === Tight pack: cards flush, no gaps === */
-:root { --gap: 0px; }                     /* grid boşluğu sıfır */
-.grid{
-  gap: 0 !important;
-  margin: 0 !important;
-  justify-items: stretch;                  /* kartları hücreye yay */
-}
-.tarot-card{
-  width: 100%;                             /* sütun genişliğini doldur */
-  max-width: none;                         /* 140px sınırını kaldır */
-  border-radius: 0 !important;             /* tam yapışsın */
-  box-shadow: none !important;             /* aradaki gölgeyi kaldır */
-}
-.tarot-card .front,
-.tarot-card .back{ border-radius: 0 !important; }
-
-.tarot-card .front{ border: none !important; }  /* 1px border çizgisini kaldır */
-
-/* (İstersen) iç padding kalsın, ama tamamen düz isterse: */
-/* .tarot-card .front{ padding: 0 !important; } */
 </style>
 </head>
 <body>

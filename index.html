@@ -47,7 +47,12 @@
   .rev-badge{position:absolute;top:6px;right:6px;background:rgba(239,71,111,.92);color:#fff;padding:4px 8px;border-radius:10px;font-size:12px;display:none}
   .tarot-card.is-reversed .rev-badge{display:block}
   .title{font-weight:800;margin-top:8px}
-  .mini{font-size:12px;color:var(--muted)}
+  .title{font-weight:800;margin-top:8px}
+-  .mini{font-size:12px;color:var(--muted)}
++  .mini{font-size:12px;color:var(--muted);white-space:pre-wrap;overflow-wrap:break-word}
+  /* Shuffle animasyonu */
+  @keyframes shuffleSpin{0%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}100%{transform:rotate(0)}}
+  .shuffle .tarot-card{animation:shuffleSpin .25s ease both}
 
   /* Shuffle animasyonu */
   @keyframes shuffleSpin{0%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}100%{transform:rotate(0)}}
@@ -185,7 +190,11 @@ const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
 
 function t(name){return langSel.value==='tr'?TAROT.trName(name):name}
-function m(card){return (card.reversed?card.longR:card.longU)}
+-function m(card){return (card.reversed?card.longR:card.longU)}
++function m(card){
++  if(!card) return '';
++  return card.reversed ? (card.longR || card.reversed || '') : (card.longU || card.upright || '');
++}
 
 function getState(){return{type:spreadSel.value,question:qInput.value.trim(),allowReversed:!!allowRev.checked,autoFlip:!!autoFlip.checked,showImages:!!showImages.checked,pickMode:!!pickMode.checked,lang:langSel.value,theme:themeSel.value,cards:LAST_PICKS.map((p,i)=>({name:p.name,reversed:p.reversed,pos:i}))}};
 function saveLocal(st){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
@@ -212,22 +221,39 @@ function drawFromPicks(){ const type=spreadSel.value; board.innerHTML=''; board.
 function deal(){ board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250); board.setAttribute('aria-busy','true'); board.innerHTML=''; const type=spreadSel.value; board.setAttribute('data-type',type); const need=(POSITIONS[type]||['Mesaj']).length; if(pickMode.checked){ renderDeck(); summary.textContent= (langSel.value==='tr'?`Seçmeli mod: ${need} kart seç.`:`Pick mode: choose ${need} cards.`); explain.hidden=false; board.removeAttribute('aria-busy'); return; } const d=TAROT.cards.slice(); shuffle(d); LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false})); LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) ); afterDeal(type); }
 
 function afterDeal(type){ const qtxt=qInput.value.trim(); const mapTR={one:'Tek Kart hazır.',three:'3 Kart hazır.',celtic:'Kelt Haçı (10) hazır.',relation:'İlişki (6) hazır.'}; const mapEN={one:'One Card ready.',three:'3-Card ready.',celtic:'Celtic Cross ready.',relation:'Relationship spread ready.'}; let txt=(langSel.value==='tr'?mapTR[type]:mapEN[type])||''; if(qtxt) txt+= (langSel.value==='tr'?` Soru: “${qtxt}”.`:` Question: “${qtxt}”.`); summary.textContent=txt+(langSel.value==='tr'?' Kartlara tıklayarak çevir.':' Click cards to flip.'); explain.hidden=false; board.removeAttribute('aria-busy');
-  // 🔁 Otomatik flip – sadece #board içindeki kartları sırayla aç
-  if (autoFlip && autoFlip.checked) {
-    const need = (POSITIONS[type] || ['Mesaj']).length;
-    const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
-    if (cards.length === need) {
-      let i = 0;
-      const tick = () => {
-        if (i >= cards.length) return;
-        const c = cards[i++];
-        void c.offsetHeight; // reflow
-        c.classList.add('flipped');
-        setTimeout(tick, 150);
-      };
-      requestAnimationFrame(() => setTimeout(tick, 100));
-    }
-  }
+-  // 🔁 Otomatik flip – sadece #board içindeki kartları sırayla aç
+-  if (autoFlip && autoFlip.checked) {
+-    const need = (POSITIONS[type] || ['Mesaj']).length;
+-    const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
+-    if (cards.length === need) {
+-      let i = 0;
+-      const tick = () => {
+-        if (i >= cards.length) return;
+-        const c = cards[i++];
+-        void c.offsetHeight; // reflow
+-        c.classList.add('flipped');
+-        setTimeout(tick, 150);
+-      };
+-      requestAnimationFrame(() => setTimeout(tick, 100));
+-    }
+-  }
++  // 🔁 Otomatik flip – board içindeki mevcut tüm kartları sırayla aç (need'e göre sınır)
++  if (autoFlip && autoFlip.checked) {
++    const need = (POSITIONS[type] || ['Mesaj']).length;
++    const cards = Array.from(board.querySelectorAll('.tarot-card'));
++    const total = Math.min(cards.length, need);
++    if (total > 0) {
++      let i = 0;
++      const tick = () => {
++        if (i >= total) return;
++        const c = cards[i++];
++        void c.offsetHeight; // reflow
++        c.classList.add('flipped');
++        setTimeout(tick, 150);
++      };
++      requestAnimationFrame(() => setTimeout(tick, 100));
++    }
++  }
   const st=getState(); saveLocal(st); const url=shareURL(st); sharebar.hidden=false; copyBtn.onclick=async()=>{ try{ await navigator.clipboard.writeText(url); copyBtn.textContent=(langSel.value==='tr'?'Kopyalandı':'Copied'); setTimeout(()=>copyBtn.textContent=(langSel.value==='tr'?'Linki kopyala':'Copy link'),1200);}catch(e){ alert(url);} }; waBtn.onclick=()=>{ const t=encodeURIComponent(`${langSel.value==='tr'?'Tarot açılımım:':'My tarot spread:'}\n${url}`); window.open(`https://wa.me/?text=${t}`,'_blank'); }; xBtn.onclick=()=>{ const t=encodeURIComponent(`Tabirly Tarot — ${url}`); window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank'); };
 }
 

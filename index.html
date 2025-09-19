@@ -57,7 +57,7 @@ select,input{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.08
   position:relative; aspect-ratio:3/5; border-radius:12px;
   transform-style:preserve-3d; transition:transform .65s cubic-bezier(.2,.6,.2,1);
   box-shadow:var(--shadow); cursor:pointer; will-change:transform;
-  width:100%; max-width:140px; justify-self:center;
+  width:100%; max-width:140px; justify-self:center; /* küçük */
 }
 .tarot-card.flipped{transform:rotateY(180deg)}
 .tarot-card .face{position:absolute;inset:0;display:grid;place-items:center;backface-visibility:hidden;border-radius:12px;overflow:hidden}
@@ -122,26 +122,15 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .compact-select{width:auto}
 select{appearance:auto}
 @media (max-width:700px){.tarot-card{max-width:100px}}
-/* Kart dönüşünü görünür kıl (perspektif) */
-.grid{ perspective: 1200px; }
-
-/* Kartın başlangıç hali net olsun */
-.tarot-card{ transform: rotateY(0deg); }
-
-/* İç yüzeyler tıklamayı engellemesin */
-.tarot-card .face{ pointer-events: none; }
-
-/* Kartın kendisi tıklanabilir kalsın */
-.tarot-card{ pointer-events: auto; }
-
 </style>
 </head>
 <body>
   <div class="wrap">
     <header>
+      
       <div class="hgroup">
-        <h1>Tabirly Tarot</h1>
-        <p>Tek Kart, 3 Kart, Kelt Haçı, İlişki • Seçmeli mod • Paylaş/Görsel • LocalStorage (veri sizde kalır) • TR/EN • Tema</p>
+        <h1>Tabirly Tarot </h1>
+        <p>Tek Kart, 3 Kart, Kelt Haçı, İlişki • Seçmeli mod • Paylaş/Görsel • LocalStorage(Yani bilgileriniz bize hiç ulaşmıyor) • TR/EN • Tema</p>
       </div>
     </header>
 
@@ -185,6 +174,7 @@ select{appearance:auto}
           </select>
         </label>
       </div>
+
     </section>
 
     <section class="panel" id="extras">
@@ -203,7 +193,7 @@ select{appearance:auto}
       <p id="summary">Kartlara tıklayarak çevir. Ayarlardan ters kartı ve otomatik flip’i yönet. Seçmeli mod açıkken, desteden sırasıyla gerekli sayıda kart seç.</p>
     </section>
 
-    <!-- Uzun yorumlar -->
+    <!-- 🔽 Uzun yorumlar buraya gelecek -->
     <section id="longReads" class="panel" hidden>
       <h3>Uzun Yorumlar</h3>
       <div id="longList"></div>
@@ -268,11 +258,6 @@ const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
 
-/* ---- Zamanlayıcı yöneticisi ---- */
-let _timers = [];
-function schedule(fn, ms){ const id = setTimeout(fn, ms); _timers.push(id); return id; }
-function cancelAllTimers(){ _timers.forEach(clearTimeout); _timers = []; }
-
 function t(name){return langSel.value==='tr'?TAROT.trName(name):name}
 function longText(card){return (card.reversed?card.longR:card.longU)}
 function shortText(card){return (card.reversed?card.reversed:card.upright)}
@@ -301,9 +286,7 @@ function renderCard(card,type,idx){
 }
 
 function renderDeck(){
-  deck.hidden = !pickMode.checked;
-  if (deck.hidden) return;
-  deck.innerHTML='';
+  deck.innerHTML=''; deck.hidden=!pickMode.checked; if(deck.hidden) return;
   const type=spreadSel.value, need=(POSITIONS[type]||['Mesaj']).length; let picked=0; LAST_PICKS=[]; const d=TAROT.cards.slice(); shuffle(d);
   d.forEach(card=>{
     const c=el('div','tarot-card');
@@ -319,7 +302,6 @@ function renderDeck(){
     deck.appendChild(c);
   });
 }
-
 function drawFromPicks(){
   const type=spreadSel.value;
   board.innerHTML=''; board.setAttribute('data-type',type);
@@ -328,26 +310,15 @@ function drawFromPicks(){
 }
 
 function deal(){
-  cancelAllTimers();
-  board.classList.add('shuffle'); schedule(()=>board.classList.remove('shuffle'),250);
+  board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250);
   board.setAttribute('aria-busy','true'); board.innerHTML='';
-  longBox.innerHTML=''; longSec.hidden=true;
-
   const type=spreadSel.value; board.setAttribute('data-type',type);
-
-  // Otomatik modda deste tamamen kapalı
-  deck.innerHTML=''; deck.hidden=true;
-
   const need=(POSITIONS[type]||['Mesaj']).length;
-
   if(pickMode.checked){
     renderDeck();
     summary.textContent=(langSel.value==='tr'?`Seçmeli mod: ${need} kart seç.`:`Pick mode: choose ${need} cards.`);
-    explain.hidden=false; board.removeAttribute('aria-busy');
-    sharebar.hidden=true;
-    return;
+    explain.hidden=false; board.removeAttribute('aria-busy'); return;
   }
-
   const d=TAROT.cards.slice(); shuffle(d);
   LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false}));
   LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) );
@@ -376,22 +347,15 @@ function afterDeal(type){
   summary.textContent = txt + (langSel.value==='tr'?' Kartlara tıklayarak çevir.':' Click cards to flip.');
   explain.hidden=false; board.removeAttribute('aria-busy');
 
-  // Uzun yorumlar
+  // Uzun yorumlar altta
   fillLongReads(type);
 
-  // Otomatik flip (iptal edilebilir)
-  cancelAllTimers();
-if (autoFlip && autoFlip.checked) {
-  const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
-  let i = 0;
-  function tick(){
-    if(i >= cards.length) return;
-    cards[i++].classList.add('flipped');
-    setTimeout(tick, 150);
+  // Otomatik flip
+  if(autoFlip && autoFlip.checked){
+    const cards=Array.from(document.querySelectorAll('#board .tarot-card'));
+    let i=0; function tick(){ if(i>=cards.length) return; const c=cards[i++]; void c.offsetHeight; c.classList.add('flipped'); setTimeout(tick,150); }
+    requestAnimationFrame(()=>setTimeout(tick,120));
   }
-  requestAnimationFrame(()=> setTimeout(tick, 120));
-}
-
 
   // Kaydet & paylaş
   const st=getState(); saveLocal(st);
@@ -408,20 +372,7 @@ themeSel.addEventListener('change',applyTheme);
 langSel.addEventListener('change',()=>{ const st=getState(); saveLocal(st); if(LAST_PICKS.length){ drawFromPicks(); fillLongReads(spreadSel.value); }});
 
 dealBtn.addEventListener('click',deal);
-pickMode.addEventListener('change',()=>{
-  cancelAllTimers();
-  board.classList.remove('shuffle');
-  board.removeAttribute('aria-busy');
-  board.innerHTML=''; longBox.innerHTML=''; longSec.hidden=true;
-
-  if(pickMode.checked){
-    deck.hidden=false; deck.innerHTML=''; renderDeck();
-    sharebar.hidden=true;
-    requestAnimationFrame(()=> deck.scrollIntoView({behavior:'smooth', block:'start'}));
-  }else{
-    deck.innerHTML=''; deck.hidden=true;
-  }
-});
+pickMode.addEventListener('change',()=>{ if(pickMode.checked){ renderDeck(); } else { deck.hidden=true; }});
 
 (function init(){
   const hash=new URLSearchParams(location.hash.slice(1)); let st=null;
@@ -445,13 +396,6 @@ pickMode.addEventListener('change',()=>{
     if(pickMode.checked) renderDeck();
   }
 })();
-  // Delegasyon: board içindeki herhangi bir karta tıklanınca çevir
-board.addEventListener('click', (e)=>{
-  const card = e.target.closest('.tarot-card');
-  if(!card) return;
-  card.classList.toggle('flipped');
-});
-
 </script>
 </body>
 </html>

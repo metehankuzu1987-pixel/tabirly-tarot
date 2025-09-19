@@ -122,6 +122,7 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .compact-select{width:auto}
 select{appearance:auto}
 @media (max-width:700px){.tarot-card{max-width:100px}}
+
 </style>
 </head>
 <body>
@@ -294,12 +295,12 @@ function renderCard(card,type,idx){
 
   if(showImages && showImages.checked){
     const img=new Image();
-    img.className='bg'; 
+    img.className='bg';
     img.alt='';
-    img.loading='lazy'; 
+    img.loading='eager';     // 'lazy' yerine 'eager'
+    img.decoding='async';
     img.src=asset(`img/${slug(card.name)}.jpg`);
-    // img.crossOrigin='anonymous'; // harici CDN kullanırsan ve CORS açıksa
-    img.onerror=()=>img.remove(); 
+    img.onerror=()=>img.remove();
     front.appendChild(img);
   }
 

@@ -104,7 +104,7 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 [data-theme="light"] .tarot-card .front{background:linear-gradient(180deg,#ffffff,#f7f9ff);border:1px solid rgba(15,23,42,.08)}
 [data-theme="light"] .pos-badge{background:rgba(9,16,22,.08);color:#091016}
 
-/* --- Ensure image fully fills card & sits above background --- */
+/* --- Image layering: image fills card, sits above background --- */
 .tarot-card .front{ position:relative; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
 .tarot-card.has-img .front{ background:transparent !important; }
 .tarot-card .front img.bg{
@@ -117,17 +117,18 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .tarot-card .front > :not(img){ position:relative; z-index:2 !important; }
 
 @media (max-width:700px){.tarot-card{max-width:100px}}
-  /* ---- PICK MODE (DECK) ---- */
-.tarot-card.in-deck .front{ display:none; }             /* destede ön yüz hiç kullanılmıyor */
-.tarot-card.in-deck .back{ position:relative; }         /* rozet için referans */
+
+/* ---- PICK MODE (DECK) ---- */
+.tarot-card.in-deck .front{ display:none; }             /* deck cards never flip/show front */
+.tarot-card.in-deck .back{ position:relative; }
 .tarot-card.in-deck .back::after{
   content:'Picked';
   position:absolute; top:6px; left:6px;
   padding:3px 7px; border-radius:9px; font-size:11px;
-  background:rgba(0,0,0,.45); color:#fff; display:none;
+  background:rgba(0,0,0,.45); color:#fff;
+  display:none;
 }
 .tarot-card.in-deck.selected .back::after{ display:inline-block; }
-
 </style>
 </head>
 <body>
@@ -199,7 +200,7 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
   </div>
 
 <script>
-/* ---------- Tarot data (short English stubs to keep file short) ---------- */
+/* ---------- Tarot data (concise EN) ---------- */
 const TAROT=(()=>{
   const U=(u,r)=>({upright:u,reversed:r,longU:u,longR:r});
   const majors={
@@ -270,7 +271,7 @@ const summary=qs('#summary'), explain=qs('#explain');
 const sharebar=qs('#sharebar'), copyBtn=qs('#copyLink'), waBtn=qs('#shareWa'), xBtn=qs('#shareX'), savePng=qs('#savePng');
 const longSec=qs('#longReads'), longBox=qs('#longList');
 
-const KEY='tabirly_tarot_en_v1';
+const KEY='tabirly_tarot_en_v2';
 const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
@@ -309,7 +310,7 @@ function renderCard(card,type,idx){
     img.src=asset(`img/${slug(card.name)}.jpg`);
     img.onerror=()=>img.remove();
     front.appendChild(img);
-    c.classList.add('has-img'); // critical for transparent front background
+    c.classList.add('has-img');
   }
 
   const posEl=el('div','pos-badge'); posEl.textContent=pos; front.appendChild(posEl);
@@ -323,10 +324,11 @@ function renderCard(card,type,idx){
   return c;
 }
 
+/* ---- PICK MODE DECK ---- */
 function renderDeck(){
   deck.innerHTML='';
   deck.hidden = !pickMode.checked;
-  if(deck.hidden) return;
+  if (deck.hidden) return;
 
   const type = spreadSel.value;
   const need = getPositions(type).length;
@@ -338,24 +340,24 @@ function renderDeck(){
   shuffle(d);
 
   d.forEach(card=>{
-    const c = el('div','tarot-card in-deck');         // 🔑 in-deck sınıfı
+    const c = el('div','tarot-card in-deck');  // deck card (back only)
     const back = el('div','face back');
-    const front = el('div','face front');             // ön yüz var ama gizli (CSS)
+    const front = el('div','face front');      // exists but hidden by CSS
     c.append(back, front);
 
-    c.addEventListener('click',()=>{
+    c.addEventListener('click', ()=>{
       if (c.classList.contains('selected') || picked >= need) return;
       const reversed = allowRev.checked ? (Math.random() < .5) : false;
       LAST_PICKS.push({...card, reversed});
       picked++;
-      c.classList.add('selected');                    // 🔑 rozet görünür
-
-      if (picked === need) drawFromPicks();           // yeterli sayıda kart seçildi
+      c.classList.add('selected');             // shows "Picked" badge
+      if (picked === need) drawFromPicks();    // enough → draw board
     });
 
     deck.appendChild(c);
   });
 }
+
 function drawFromPicks(){
   const type=spreadSel.value;
   board.innerHTML=''; board.setAttribute('data-type',type);
@@ -367,12 +369,16 @@ function deal(){
   board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250);
   board.setAttribute('aria-busy','true'); board.innerHTML='';
   const type=spreadSel.value; board.setAttribute('data-type',type);
-  const need=getPositions(type).length;
-  if(pickMode.checked){
+
+  if (pickMode.checked){
     renderDeck();
+    const need = getPositions(type).length;
     summary.textContent=`Pick mode: choose ${need} cards.`;
-    explain.hidden=false; board.removeAttribute('aria-busy'); return;
+    explain.hidden=false; board.removeAttribute('aria-busy');
+    return; // skip normal dealing
   }
+
+  const need=getPositions(type).length;
   const d=TAROT.cards.slice(); shuffle(d);
   LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false}));
   LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) );
@@ -428,8 +434,15 @@ savePng?.addEventListener('click',async()=>{
 
 function applyTheme(){ document.documentElement.setAttribute('data-theme', themeSel.value); saveLocal(getState()); }
 themeSel.addEventListener('change',applyTheme);
+
+/* keep deck reactive */
+pickMode.addEventListener('change',()=>{ 
+  if (pickMode.checked){ board.innerHTML=''; renderDeck(); } 
+  else { deck.hidden=true; } 
+});
+spreadSel.addEventListener('change',()=>{ if (pickMode.checked) renderDeck(); });
+
 dealBtn.addEventListener('click',deal);
-pickMode.addEventListener('change',()=>{ if(pickMode.checked){ renderDeck(); } else { deck.hidden=true; }});
 
 (function init(){
   const hash=new URLSearchParams(location.hash.slice(1)); let st=null;
@@ -441,6 +454,7 @@ pickMode.addEventListener('change',()=>{ if(pickMode.checked){ renderDeck(); } e
     showImages.checked=!!st.showImages; pickMode.checked=!!st.pickMode;
     themeSel.value=st.theme||'dark'; applyTheme();
   }
+  if(pickMode.checked) renderDeck(); // show deck immediately if toggled on
   if(st && st.cards && st.cards.length){
     board.setAttribute('data-type',st.type);
     LAST_PICKS=st.cards.map(k=>{const base=TAROT.cards.find(x=>x.name===k.name)||TAROT.cards[0]; return {...base,reversed:!!k.reversed};});
@@ -448,7 +462,6 @@ pickMode.addEventListener('change',()=>{ if(pickMode.checked){ renderDeck(); } e
     fillLongReads(st.type);
     summary.textContent=(st.type==='three'?'3-Card (loaded).':st.type==='celtic'?'Celtic Cross (loaded).':st.type==='relation'?'Relationship (loaded).':'One Card (loaded).')+(st.question?` Question: “${st.question}”.`: '')+' Click cards to flip.';
     explain.hidden=false; sharebar.hidden=false;
-    if(pickMode.checked) renderDeck();
   }
 })();
 </script>

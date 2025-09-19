@@ -12,58 +12,202 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%237f5af0'/><stop offset='1' stop-color='%23ffd166'/></linearGradient></defs><rect rx='14' width='64' height='64' fill='url(%23g)'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 <style>
-  :root{ --bg:#0b0d12; --card:#141827; --ink:#eef2f8; --muted:#a8b0c2; --acc:#ffd166; --ok:#06d6a0; --warn:#ef476f; --radius:18px; --gap:14px; --shadow:0 14px 40px rgba(0,0,0,.35); }
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1100px 800px at 15% -10%,#1a1f33 0%,#0b0d12 55%), var(--bg);color:var(--ink);font:16px/1.6 system-ui,Inter,Roboto,Arial}
-  .wrap{max-width:1000px;margin:28px auto;padding:0 16px 80px}
-  header{display:flex;gap:16px;align-items:center;margin:0 0 16px}
-  .logo{width:44px;height:44px;border-radius:12px;background:conic-gradient(from 0deg,#7f5af0,#00c2ff,#06d6a0,#ffd166,#7f5af0)}
-  .hgroup h1{margin:0;font-size:22px}
-  .hgroup p{margin:.25rem 0 0;color:var(--muted);font-size:14px}
+:root{
+  /* ---- Dark (varsayılan) pastel tonlar ---- */
+  --bg: #0e1118;
+  --bg2: #111828;
+  --card:#161b2a;
+  --ink:#eef3ff;           /* yazılar full açık */
+  --muted:#9fb0c7;
+  --acc1:#7fb8ff;          /* baby blue (dark versiyon) */
+  --acc2:#79e9d3;          /* su yeşili (dark versiyon) */
+  --acc3:#b79cff;          /* baby purple (dark versiyon) */
 
-  .panel{background:rgba(20,24,39,.65);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
-  .controls{display:grid;grid-template-columns:1fr 1fr auto;gap:var(--gap);align-items:end}
-  @media(max-width:700px){.controls{grid-template-columns:1fr}}
-  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-  select,input{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0f1320;color:var(--ink);padding:10px;font:inherit}
-  .row{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:center}
-  .btn{border:0;border-radius:14px;padding:12px 16px;background:linear-gradient(180deg,#ffd166,#ffca54);color:#1f1a00;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(255,209,102,.25)}
-  .btn.small{padding:8px 12px;font-weight:600}
+  --radius:14px;
+  --gap:12px;
+  --shadow:0 10px 28px rgba(0,0,0,.35);
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap);margin:18px 0}
-  #board[data-type="celtic"]{grid-template-columns:repeat(5,1fr)}
-  @media (max-width:900px){#board[data-type="celtic"]{grid-template-columns:repeat(3,1fr)}}
-  #board[data-type="relation"]{grid-template-columns:repeat(3,1fr)}
+  /* Boyutlar ↓ (yarı/kompakt) */
+  --card-pad:10px;
+  --title-size:14px;
+  --mini-size:11px;
+  --long-size:12px;
+  --badge-size:11px;
+}
 
-  .tarot-card{position:relative;aspect-ratio:3/5;border-radius:16px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.6,.2,1);box-shadow:var(--shadow);cursor:pointer;will-change:transform}
-  .tarot-card.flipped{transform:rotateY(180deg)}
-  .tarot-card .face{position:absolute;inset:0;display:grid;place-items:center;backface-visibility:hidden;border-radius:16px;overflow:hidden}
-  .tarot-card .back{background:repeating-radial-gradient(circle at 50% 38%, #222a44 0 8px, #1a2240 8px 16px)}
-  .tarot-card .front{transform:rotateY(180deg);background:#141a2d;padding:12px;text-align:center;border:1px solid rgba(255,255,255,.08);position:relative}
-  .tarot-card .front img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.28;filter:contrast(1.05) saturate(1.1) brightness(.9)}
-  .tarot-card .front .title,.tarot-card .front .mini,.tarot-card .front .long,.pos-badge,.rev-badge{position:relative;z-index:2}
-  .pos-badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.5);padding:4px 8px;border-radius:10px;font-size:12px}
-  .rev-badge{position:absolute;top:6px;right:6px;background:rgba(239,71,111,.92);color:#fff;padding:4px 8px;border-radius:10px;font-size:12px;display:none}
-  .tarot-card.is-reversed .rev-badge{display:inline-block}
-  .title{font-weight:800;margin-top:8px}
-  .mini{font-size:12px;color:var(--muted);margin-top:4px}
-  .long{font-size:13px;margin-top:8px;line-height:1.5;color:var(--ink)}
+/* Genel reset & layout */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:
+    radial-gradient(1000px 700px at 15% -10%, var(--bg2) 0%, var(--bg) 55%),
+    var(--bg);
+  color:var(--ink);
+  font:15px/1.6 system-ui, Inter, Roboto, Arial, sans-serif;
+}
+.wrap{max-width:1000px;margin:24px auto;padding:0 12px 64px}
+header{display:flex;gap:12px;align-items:center;margin:0 0 12px}
+.logo{width:38px;height:38px;border-radius:10px;
+  background:conic-gradient(from 0deg, var(--acc3), var(--acc1), var(--acc2), var(--acc3))}
+.hgroup h1{margin:0;font-size:20px}
+.hgroup p{margin:.25rem 0 0;color:var(--muted);font-size:13px}
 
-  /* Shuffle animasyonu */
-  @keyframes shuffleSpin{0%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}100%{transform:rotate(0)}}
-  .shuffle .tarot-card{animation:shuffleSpin .25s ease both}
+.panel{
+  background:rgba(22,27,42,.65);
+  border:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(6px);
+  border-radius:var(--radius);
+  padding:12px;
+  box-shadow:var(--shadow);
+}
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:var(--gap);
+  align-items:end;
+}
+@media(max-width:700px){.controls{grid-template-columns:1fr}}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+select,input{
+  width:100%;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.08);
+  background:#0f1423;
+  color:var(--ink);
+  padding:8px 9px;
+  font:inherit;
+}
+.row{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:center}
 
-  footer{margin-top:28px;color:var(--muted);font-size:12px;text-align:center}
-  .inline{display:flex;align-items:center;gap:10px}
-  .muted{color:var(--muted);font-size:12px}
+/* Butonlar pastel degrade */
+.btn{
+  border:0;border-radius:12px;padding:10px 14px;
+  background:linear-gradient(180deg, var(--acc1), var(--acc2));
+  color:#0c0f14;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 18px rgba(127,184,255,.25);
+}
+.btn.small{padding:7px 10px;font-weight:600}
 
-  [data-theme="light"]{--bg:#f6f7fb; --card:#ffffff; --ink:#0b0d12; --muted:#5b657a}
-  [data-theme="light"] body{background:linear-gradient(180deg,#eef2ff,#f6f7fb)}
+/* GRID — kartlar küçüldü */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:var(--gap);
+  margin:14px 0;
+}
+#board[data-type="celtic"]{grid-template-columns:repeat(5,1fr)}
+@media (max-width:900px){#board[data-type="celtic"]{grid-template-columns:repeat(3,1fr)}}
+#board[data-type="relation"]{grid-template-columns:repeat(3,1fr)}
 
-  /* Sadece görseli ters çevir, metin düz kalsın */
-  .tarot-card.is-reversed .front img.bg { transform: rotate(180deg); }
-  .tarot-card .rev-badge{display:none}
-  .tarot-card.is-reversed .rev-badge{display:inline-block}
+/* KART */
+.tarot-card{
+  position:relative;
+  aspect-ratio:3/5;
+  border-radius:12px;
+  transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.2,.6,.2,1);
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  will-change:transform;
+}
+.tarot-card.flipped{transform:rotateY(180deg)}
+.tarot-card .face{
+  position:absolute;inset:0;display:grid;place-items:center;
+  backface-visibility:hidden;border-radius:12px;overflow:hidden
+}
+.tarot-card .back{
+  background:
+    linear-gradient(135deg, rgba(127,184,255,.18), rgba(121,233,211,.12)),
+    repeating-radial-gradient(circle at 50% 38%, #202744 0 7px, #1a2240 7px 14px);
+}
+.tarot-card .front{
+  transform:rotateY(180deg);
+  background:#141a2d;
+  padding:var(--card-pad);
+  text-align:center;
+  border:1px solid rgba(255,255,255,.08);
+  position:relative;
+}
+.tarot-card .front img.bg{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;opacity:.26;
+  filter:contrast(1.05) saturate(1.05) brightness(.9)
+}
+
+/* İç tipografi (küçültüldü) */
+.title{font-weight:800;margin-top:6px;font-size:var(--title-size)}
+.mini{font-size:var(--mini-size);color:var(--muted);margin-top:3px}
+.long{font-size:var(--long-size);margin-top:6px;line-height:1.45;color:var(--ink)}
+
+/* Rozetler küçük */
+.pos-badge,.rev-badge{
+  position:absolute;top:6px;padding:3px 7px;border-radius:9px;
+  font-size:var(--badge-size)
+}
+.pos-badge{left:6px;background:rgba(0,0,0,.45);color:#fff}
+.rev-badge{right:6px;background:rgba(239,71,111,.92);color:#fff;display:none}
+.tarot-card.is-reversed .rev-badge{display:inline-block}
+
+/* Ters kartlarda SADECE görseli çevir (metin düz) */
+.tarot-card.is-reversed .front img.bg{transform:rotate(180deg)}
+
+/* Shuffle animasyonu */
+@keyframes shuffleSpin{0%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}100%{transform:rotate(0)}}
+.shuffle .tarot-card{animation:shuffleSpin .22s ease both}
+
+footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
+.inline{display:flex;align-items:center;gap:8px}
+.muted{color:var(--muted);font-size:12px}
+
+/* ---- LIGHT THEME: sweet pastel (baby blue, sea green, baby purple) ---- */
+[data-theme="light"]{
+  --bg:#f4f7ff;
+  --bg2:#ecf4ff;
+  --card:#ffffff;
+  --ink:#0b0d12;           /* yazılar full koyu */
+  --muted:#4a5a70;
+  --acc1:#B3D8FF;          /* baby blue */
+  --acc2:#B6F2E3;          /* su yeşili */
+  --acc3:#D5C6FF;          /* baby purple */
+
+  --shadow:0 8px 20px rgba(15,23,42,.08);
+}
+[data-theme="light"] body{
+  background:
+    radial-gradient(1000px 700px at 18% -10%, var(--bg2) 0%, var(--bg) 60%),
+    var(--bg);
+}
+[data-theme="light"] .panel{
+  background:#ffffffcc;
+  border:1px solid rgba(15,23,42,.06);
+}
+[data-theme="light"] select,
+[data-theme="light"] input{
+  background:#ffffff;
+  color:var(--ink);
+  border:1px solid rgba(15,23,42,.12);
+}
+[data-theme="light"] .btn{
+  background:linear-gradient(180deg, var(--acc1), var(--acc3));
+  color:#091016;
+  box-shadow:0 6px 16px rgba(181,209,255,.35);
+}
+[data-theme="light"] .tarot-card .back{
+  background:
+    linear-gradient(135deg, rgba(179,216,255,.45), rgba(214,198,255,.35)),
+    repeating-radial-gradient(circle at 50% 38%, #e8efff 0 7px, #dee9ff 7px 14px);
+}
+[data-theme="light"] .tarot-card .front{
+  background:linear-gradient(180deg,#ffffff,#f7f9ff);
+  border:1px solid rgba(15,23,42,.08);
+}
+[data-theme="light"] .pos-badge{
+  background:rgba(9,16,22,.08); color:#091016;
+}
+[data-theme="light"] .rev-badge{
+  background:#ef476f; color:#fff;
+}
+
 </style>
 </head>
 <body>

@@ -117,6 +117,17 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 .tarot-card .front > :not(img){ position:relative; z-index:2 !important; }
 
 @media (max-width:700px){.tarot-card{max-width:100px}}
+  /* ---- PICK MODE (DECK) ---- */
+.tarot-card.in-deck .front{ display:none; }             /* destede ön yüz hiç kullanılmıyor */
+.tarot-card.in-deck .back{ position:relative; }         /* rozet için referans */
+.tarot-card.in-deck .back::after{
+  content:'Picked';
+  position:absolute; top:6px; left:6px;
+  padding:3px 7px; border-radius:9px; font-size:11px;
+  background:rgba(0,0,0,.45); color:#fff; display:none;
+}
+.tarot-card.in-deck.selected .back::after{ display:inline-block; }
+
 </style>
 </head>
 <body>
@@ -313,19 +324,35 @@ function renderCard(card,type,idx){
 }
 
 function renderDeck(){
-  deck.innerHTML=''; deck.hidden=!pickMode.checked; if(deck.hidden) return;
-  const type=spreadSel.value, need=getPositions(type).length; let picked=0; LAST_PICKS=[]; const d=TAROT.cards.slice(); shuffle(d);
+  deck.innerHTML='';
+  deck.hidden = !pickMode.checked;
+  if(deck.hidden) return;
+
+  const type = spreadSel.value;
+  const need = getPositions(type).length;
+
+  let picked = 0;
+  LAST_PICKS = [];
+
+  const d = TAROT.cards.slice();
+  shuffle(d);
+
   d.forEach(card=>{
-    const c=el('div','tarot-card');
-    const back=el('div','face back'); const front=el('div','face front');
-    const title=el('div','title'); title.textContent='Picked';
-    front.appendChild(title); c.append(back,front);
+    const c = el('div','tarot-card in-deck');         // 🔑 in-deck sınıfı
+    const back = el('div','face back');
+    const front = el('div','face front');             // ön yüz var ama gizli (CSS)
+    c.append(back, front);
+
     c.addEventListener('click',()=>{
-      if(c.classList.contains('chosen')||picked>=need) return;
-      const reversed=allowRev.checked?(Math.random()<.5):false;
-      LAST_PICKS.push({...card,reversed}); picked++; c.classList.add('chosen','flipped');
-      if(picked===need) drawFromPicks();
+      if (c.classList.contains('selected') || picked >= need) return;
+      const reversed = allowRev.checked ? (Math.random() < .5) : false;
+      LAST_PICKS.push({...card, reversed});
+      picked++;
+      c.classList.add('selected');                    // 🔑 rozet görünür
+
+      if (picked === need) drawFromPicks();           // yeterli sayıda kart seçildi
     });
+
     deck.appendChild(c);
   });
 }

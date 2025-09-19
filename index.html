@@ -167,7 +167,22 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 [data-theme="light"] .tarot-card .back {
   background: #dfe6f7 !important;   /* açık temada soft gri/mavi */
 }
+/* === Yan boşlukları da sıfırla === */
+#board.grid,
+#deck.grid {
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;    /* 🔑 sağ/sol padding varsa kaldır */
+  justify-items: stretch;   /* kartları hücreye yay */
+}
 
+#board .tarot-card,
+#deck .tarot-card {
+  margin: 0 !important;     /* kartların kendi marginlerini sıfırla */
+  box-shadow: none !important;
+  border-radius: 0 !important;  /* tam yapışık istersen */
+  width: 100% !important;       /* kolon genişliğini tam doldur */
+}
 </style>
 </head>
 <body>

@@ -184,7 +184,9 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
       </div>
     </section>
 
-    <section id="deck" class="grid" hidden aria-label="Deck"></section>
+    <div id="pickCounter" class="muted" style="margin:6px 0 6px; display:none;"></div>
+<section id="deck" class="grid" hidden aria-label="Deste"></section>
+
     <section id="board" class="grid" aria-live="polite" aria-busy="false"></section>
 
     <section id="explain" class="panel" hidden>
@@ -334,6 +336,9 @@ function renderDeck(){
   const need = getPositions(type).length;
 
   let picked = 0;
+  updatePickCounter(picked, need);
+  
+
   LAST_PICKS = [];
 
   const d = TAROT.cards.slice();
@@ -372,6 +377,7 @@ function deal(){
 
   if (pickMode.checked){
     renderDeck();
+    updatePickCounter(0, getPositions(type).length);
     const need = getPositions(type).length;
     summary.textContent=`Pick mode: choose ${need} cards.`;
     explain.hidden=false; board.removeAttribute('aria-busy');

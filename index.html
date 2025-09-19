@@ -60,11 +60,8 @@
   [data-theme="light"] body{background:linear-gradient(180deg,#eef2ff,#f6f7fb)}
   /* Sadece görseli ters çevir, metin düz kalsın */
 .tarot-card.is-reversed .front img.bg { transform: rotate(180deg); }
-
-/* Rozeti göster (zaten vardı ama netleştirelim) */
 .tarot-card .rev-badge{display:none}
 .tarot-card.is-reversed .rev-badge{display:inline-block}
-
 </style>
 </head>
 <body>
@@ -217,25 +214,54 @@ function drawFromPicks(){ const type=spreadSel.value; board.innerHTML=''; board.
 
 function deal(){ board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250); board.setAttribute('aria-busy','true'); board.innerHTML=''; const type=spreadSel.value; board.setAttribute('data-type',type); const need=(POSITIONS[type]||['Mesaj']).length; if(pickMode.checked){ renderDeck(); summary.textContent= (langSel.value==='tr'?`Seçmeli mod: ${need} kart seç.`:`Pick mode: choose ${need} cards.`); explain.hidden=false; board.removeAttribute('aria-busy'); return; } const d=TAROT.cards.slice(); shuffle(d); LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false})); LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) ); afterDeal(type); }
 
-function afterDeal(type){ const qtxt=qInput.value.trim(); const mapTR={one:'Tek Kart hazır.',three:'3 Kart hazır.',celtic:'Kelt Haçı (10) hazır.',relation:'İlişki (6) hazır.'}; const mapEN={one:'One Card ready.',three:'3-Card ready.',celtic:'Celtic Cross ready.',relation:'Relationship spread ready.'}; let txt=(langSel.value==='tr'?mapTR[type]:mapEN[type])||''; if(qtxt) txt+= (langSel.value==='tr'?` Soru: “${qtxt}”.`:` Question: “${qtxt}”.`); summary.textContent=txt+(langSel.value==='tr'?' Kartlara tıklayarak çevir.':' Click cards to flip.'); explain.hidden=false; board.removeAttribute('aria-busy');
-// 🔁 Otomatik flip – #board içindeki kartları sırayla, atlamasız
-if (autoFlip && autoFlip.checked) {
-  const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
-  let i = 0;
-  function tick() {
-    if (i >= cards.length) return;
-    const c = cards[i++];
-    void c.offsetHeight;           // reflow -> zamanlama buglarını öldürür
-    c.classList.add('flipped');
-    setTimeout(tick, 150);         // sıradaki karta geç
+function afterDeal(type){
+  const qtxt = qInput.value.trim();
+  const mapTR = {one:'Tek Kart hazır.',three:'3 Kart hazır.',celtic:'Kelt Haçı (10) hazır.',relation:'İlişki (6) hazır.'};
+  const mapEN = {one:'One Card ready.',three:'3-Card ready.',celtic:'Celtic Cross ready.',relation:'Relationship spread ready.'};
+  let txt = (langSel.value==='tr' ? mapTR[type] : mapEN[type]) || '';
+  if (qtxt) txt += (langSel.value==='tr' ? ` Soru: “${qtxt}”.` : ` Question: “${qtxt}”.`);
+  summary.textContent = txt + (langSel.value==='tr' ? ' Kartlara tıklayarak çevir.' : ' Click cards to flip.');
+  explain.hidden = false;
+  board.removeAttribute('aria-busy');
+
+  // 🔁 Otomatik flip – #board içindeki kartları sırayla, atlamasız
+  if (autoFlip && autoFlip.checked) {
+    const cards = Array.from(document.querySelectorAll('#board .tarot-card'));
+    let i = 0;
+    function tick() {
+      if (i >= cards.length) return;
+      const c = cards[i++];
+      void c.offsetHeight;           // reflow
+      c.classList.add('flipped');
+      setTimeout(tick, 150);
+    }
+    requestAnimationFrame(() => setTimeout(tick, 120));
   }
-  // layout otursun diye bir frame bekle
-  requestAnimationFrame(() => setTimeout(tick, 120));
+
+  // 🔗 Paylaşım + Kaydet
+  const st = getState();
+  saveLocal(st);
+  const url = shareURL(st);
+  sharebar.hidden = false;
+
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      copyBtn.textContent = (langSel.value==='tr' ? 'Kopyalandı' : 'Copied');
+      setTimeout(() => copyBtn.textContent = (langSel.value==='tr' ? 'Linki kopyala' : 'Copy link'), 1200);
+    } catch(e){ alert(url); }
+  };
+  waBtn.onclick = () => {
+    const t = encodeURIComponent(`${langSel.value==='tr'?'Tarot açılımım:':'My tarot spread:'}\n${url}`);
+    window.open(`https://wa.me/?text=${t}`, '_blank');
+  };
+  xBtn.onclick = () => {
+    const t = encodeURIComponent(`Tabirly Tarot — ${url}`);
+    window.open(`https://twitter.com/intent/tweet?text=${t}`, '_blank');
+  };
 }
 
-  }
-  const st=getState(); saveLocal(st); const url=shareURL(st); sharebar.hidden=false; copyBtn.onclick=async()=>{ try{ await navigator.clipboard.writeText(url); copyBtn.textContent=(langSel.value==='tr'?'Kopyalandı':'Copied'); setTimeout(()=>copyBtn.textContent=(langSel.value==='tr'?'Linki kopyala':'Copy link'),1200);}catch(e){ alert(url);} }; waBtn.onclick=()=>{ const t=encodeURIComponent(`${langSel.value==='tr'?'Tarot açılımım:':'My tarot spread:'}\n${url}`); window.open(`https://wa.me/?text=${t}`,'_blank'); }; xBtn.onclick=()=>{ const t=encodeURIComponent(`Tabirly Tarot — ${url}`); window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank'); };
-}
+
 
 savePng?.addEventListener('click',async()=>{ try{ const node=board; const canvas=await html2canvas(node,{backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12',useCORS:true,scale:2}); const link=document.createElement('a'); link.download='tabirly-tarot.png'; link.href=canvas.toDataURL('image/png'); link.click(); }catch(e){ alert('Görsel oluşturulamadı :(');} });
 

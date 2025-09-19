@@ -65,6 +65,11 @@
 
   footer{margin-top:28px;color:var(--muted);font-size:12px;text-align:center}
   .inline{display:flex;align-items:center;gap:10px}
+  
+  /* Spread'e göre kolon düzeni (eklendi) */
+  #board[data-type="celtic"]{grid-template-columns:repeat(5,1fr)}
+  @media (max-width:900px){#board[data-type="celtic"]{grid-template-columns:repeat(3,1fr)}}
+  #board[data-type="relation"]{grid-template-columns:repeat(3,1fr)}
 </style>
 </head>
 <body>
@@ -84,6 +89,8 @@
           <select id="spread">
             <option value="one">Tek Kart</option>
             <option value="three">3 Kart (Geçmiş–Şimdi–Gelecek)</option>
+            <option value="celtic">Kelt Haçı (10 kart)</option>
+            <option value="relation">İlişki Açılımı (6 kart)</option>
           </select>
         </div>
         <div>
@@ -243,8 +250,28 @@ function shuffle(a){
 
 // Pozisyon etiketleri (3 Kart)
 const POSITIONS = {
+  one:["Mesaj"],
   three:["Geçmiş","Şimdi","Gelecek"],
-  one:["Mesaj"]
+  celtic:[
+    "Durum (Şimdi)",
+    "Engel/Çapraz",
+    "Geçmiş Temel",
+    "Yakın Gelecek",
+    "Bilinç/Hedef",
+    "Bilinçaltı/Kök",
+    "Öneri/Ben",
+    "Çevre/Dış Etki",
+    "Umutlar & Korkular",
+    "Olası Sonuç"
+  ],
+  relation:[
+    "Sen",
+    "Partner",
+    "Bağ/Dinamik",
+    "Güçlü Yanlar",
+    "Zorluklar",
+    "Olası Sonuç"
+  ]
 };
 
 // ---- UI mantığı ----
@@ -259,11 +286,11 @@ const explain = qs('#explain');
 
 function deal(){
   board.setAttribute('aria-busy','true');
-  board.innerHTML = '';
-  const type = spreadSel.value; // one | three
-  const need = type === 'three' ? 3 : 1;
+  board.innerHTML='';
+  const type = spreadSel.value; // one | three | celtic | relation
+  board.setAttribute('data-type', type);
+  const need = (POSITIONS[type]||['Mesaj']).length;
 
-  // Desteden kopya alıp karıştır
   const deck = TAROT.cards.slice();
   shuffle(deck);
 
@@ -276,9 +303,29 @@ function deal(){
     board.appendChild(renderCard(card, type, i));
   });
 
+  const qtxt = qInput.value.trim();
+  let txt = type === 'three' ? '3 Kart açılımı hazır.' : (type === 'celtic' ? 'Kelt Haçı (10) açılımı hazır.' : (type === 'relation' ? 'İlişki (6) açılımı hazır.' : 'Tek Kart mesajı hazır.'));
+  if(qtxt) txt += ` Soru: “${qtxt}”.`;
+  summary.textContent = txt + ' Kartlara tıklayarak çevir.';
+  explain.hidden = false;
+  board.removeAttribute('aria-busy');
+
+  if(autoFlip.checked){
+    setTimeout(()=>{
+      board.querySelectorAll('.tarot-card').forEach((c,idx)=>setTimeout(()=>c.classList.add('flipped'), idx*180));
+    }, 120);
+  }
+}.random() < .5) : false;
+    return {...c, reversed};
+  });
+
+  picks.forEach((card, i)=>{
+    board.appendChild(renderCard(card, type, i));
+  });
+
   // Özet
   const qtxt = qInput.value.trim();
-  let txt = type === 'three' ? '3 Kart açılımı hazır.' : 'Tek Kart mesajı hazır.';
+  let txt = type === 'three' ? '3 Kart açılımı hazır.' : (type === 'celtic' ? 'Kelt Haçı (10) açılımı hazır.' : (type === 'relation' ? 'İlişki (6) açılımı hazır.' : 'Tek Kart mesajı hazır.'));
   if(qtxt) txt += ` Soru: “${qtxt}”.`;
   summary.textContent = txt + ' Kartlara tıklayarak çevir.';
   explain.hidden = false;

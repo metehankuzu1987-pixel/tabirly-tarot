@@ -346,6 +346,31 @@ select:focus,input:focus{ box-shadow: 0 0 0 3px rgba(0,140,255,.25); border-colo
     radial-gradient(120% 85% at 20% 15%, rgba(255,255,255,.08), transparent 60%),
     linear-gradient(135deg, var(--candy-2), var(--candy-1) 50%, var(--candy-3));
 }
+/* Light theme → yazılar koyu */
+[data-theme="light"] body,
+[data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
+[data-theme="light"] p, [data-theme="light"] span, [data-theme="light"] div,
+[data-theme="light"] label, [data-theme="light"] select, [data-theme="light"] input,
+[data-theme="light"] button,
+[data-theme="light"] .title, 
+[data-theme="light"] .mini, 
+[data-theme="light"] .muted {
+  color:#0b0d12 !important;
+  text-shadow:none !important;
+}
+
+/* Dark theme → yazılar açık */
+[data-theme="dark"] body,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div,
+[data-theme="dark"] label, [data-theme="dark"] select, [data-theme="dark"] input,
+[data-theme="dark"] button,
+[data-theme="dark"] .title, 
+[data-theme="dark"] .mini, 
+[data-theme="dark"] .muted {
+  color:#f7fbff !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+}
 
 </style>
 </head>

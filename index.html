@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -146,6 +146,10 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
     repeating-radial-gradient(circle at 50% 38%, #e8efff 0 7px, #dee9ff 7px 14px);
 }
 .tarot-card.flipped{ transform:none !important; }
+
+/* long reads items */
+#longList .item{border-top:1px solid rgba(255,255,255,.06);padding:10px 0}
+[data-theme="light"] #longList .item{border-color:rgba(15,23,42,.08)}
 </style>
 </head>
 <body>
@@ -211,6 +215,7 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
       <p id="summary">Kartlara tıklayarak çevir. Ayarlardan ters kart ve otomatik flip’i yönet. Seçmeli modda, desteden gerekli sayıda kartı seç.</p>
     </section>
 
+    <!-- Yorumlar her zaman EN SONA bırakıldı; görünürlük zamanlaması JS ile kontrol -->
     <section id="longReads" class="panel" hidden>
       <h3 id="longReadsHeader">Yorumlar</h3>
       <div id="longList"></div>
@@ -223,8 +228,8 @@ footer{margin-top:22px;color:var(--muted);font-size:11px;text-align:center}
 /* ================================
    0) VERİYİ UZAKTAN YÜKLE (GitHub JSON)
 ================================ */
-const DATA_URL = "https://raw.githubusercontent.com/metehankuzu1987-pixel/tabirly-tarot/refs/heads/main/tarot_full_tr_en_reversed.json"; // ← BURAYI KENDİ URL'İNLE DEĞİŞTİR
-let TAROT = { cards: [] }; // fetch sonrası dolduracağız
+const DATA_URL = "https://raw.githubusercontent.com/metehankuzu1987-pixel/tabirly-tarot/refs/heads/main/tarot_full_tr_en_reversed.json";
+let TAROT = { cards: [] };
 
 async function loadTarot() {
   const dealBtn = document.getElementById('deal');
@@ -232,11 +237,7 @@ async function loadTarot() {
     const res = await fetch(DATA_URL, { cache: "no-cache" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    // beklenen format: Array; eski kod TAROT.cards bekliyor → normalize
     TAROT.cards = Array.isArray(data) ? data : (data.cards||[]);
-    if (!Array.isArray(TAROT.cards) || TAROT.cards.length < 78) {
-      console.warn("Beklenen kart sayısı bulunamadı:", TAROT.cards.length);
-    }
     dealBtn.disabled = false;
     dealBtn.textContent = UI[langSel.value]?.deal || "Kartları çek";
   } catch (err) {
@@ -348,11 +349,9 @@ const encodeState=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const decodeState=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 let LAST_PICKS=[];
 
+/* ---- Yerelleştirme yardımcıları ---- */
 function positionsFor(type){ return UI[langSel.value].pos[type] || (langSel.value==='tr'?['Mesaj']:['Message']); }
-function txt(card, field){
-  const lang=langSel.value;
-  return card[field]?.[lang] || '';
-}
+function txt(card, field){ const lang=langSel.value; return card[field]?.[lang] || ''; }
 function getState(){return{
   type:spreadSel.value,question:qInput.value.trim(),
   allowReversed:!!allowRev.checked,autoFlip:!!autoFlip.checked,
@@ -397,10 +396,34 @@ function applyLocale(){
   if (['one','three','celtic','relation'].includes(stType)) spreadSel.value = stType;
 
   if(LAST_PICKS.length){
-    drawFromPicks(true);
-    fillLongReads(spreadSel.value);
+    drawFromPicks(true); // sadece board’u tazele
   }
   saveLocal(getState());
+}
+
+/* ================================
+   3) GÖRÜNÜRLÜK & ZAMANLAMA
+   - Yorumlar en sonda ve flip sonrası
+================================ */
+const FLIP_DELAY = 150;
+const FLIP_START = 120;
+
+function hideResultsAreas(){
+  sharebar.hidden = true;
+  longSec.hidden = true;
+  longBox.innerHTML = '';
+  explain.hidden = true;
+}
+
+function revealLongReadsAfterFlips(totalCards){
+  // Auto-flip açıksa flip süresi kadar bekle, değilse hemen göster
+  const wait = (autoFlip.checked && totalCards>0) ? (FLIP_START + FLIP_DELAY*totalCards + 80) : 0;
+  setTimeout(()=>{
+    fillLongReads(spreadSel.value);
+    longSec.hidden = false;
+    // Görüntü akışı olarak da en sonda kalsın & odak oraya aksın
+    longSec.scrollIntoView({behavior:'smooth', block:'start'});
+  }, wait);
 }
 
 /* ---- Sayaç ---- */
@@ -490,27 +513,7 @@ function drawFromPicks(skipAfter=false){
   if(!skipAfter) afterDeal(type);
 }
 
-function deal(){
-  if (!TAROT.cards.length) return;
-  board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250);
-  board.setAttribute('aria-busy','true'); board.innerHTML='';
-  const type=spreadSel.value; board.setAttribute('data-type',type);
-
-  if (pickMode.checked){
-    renderDeck();
-    const need = positionsFor(type).length;
-    summary.textContent = UI[langSel.value].pickModeHint(need);
-    explain.hidden=false; board.removeAttribute('aria-busy');
-    return;
-  }
-
-  const need=positionsFor(type).length;
-  const d=TAROT.cards.slice(); shuffle(d);
-  LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false}));
-  LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) );
-  afterDeal(type);
-}
-
+/* ---- YORUM DOLDURMA ---- */
 function fillLongReads(type){
   longBox.innerHTML='';
   LAST_PICKS.forEach((card,i)=>{
@@ -521,34 +524,39 @@ function fillLongReads(type){
 
     const bodyEl=el('div','body');
     const lang=langSel.value;
-    // uzun metin öncelikli; yoksa kısa özet
     const longTxt = card.long?.[lang];
     bodyEl.textContent = longTxt || (card.reversed ? txt(card,'reversed') : txt(card,'upright'));
 
     div.appendChild(titleEl); div.appendChild(bodyEl);
     longBox.appendChild(div);
   });
-  longSec.hidden=false;
 }
 
+/* ---- DEAL SONRASI ---- */
 function afterDeal(type){
   const L = UI[langSel.value];
   const qtxt=qInput.value.trim();
-  let txt=L.summaryReady[type]||'';
-  if(qtxt) txt += (langSel.value==='tr' ? ` Soru: “${qtxt}”.` : ` Question: “${qtxt}”.`);
-  summary.textContent = txt + L.summaryHint;
-  explain.hidden=false; board.removeAttribute('aria-busy');
+  let s = L.summaryReady[type]||'';
+  if(qtxt) s += (langSel.value==='tr' ? ` Soru: “${qtxt}”.` : ` Question: “${qtxt}”.`);
+  summary.textContent = s + L.summaryHint;
 
-  fillLongReads(type);
+  explain.hidden=false; board.setAttribute('aria-busy','false');
 
+  // Yorumları hemen GÖSTERMİYORUZ; flip’ten sonra gösteriyoruz:
+  longSec.hidden = true;
+
+  // Auto flip animasyonu
+  const cards=Array.from(board.querySelectorAll('.tarot-card'));
   if(autoFlip && autoFlip.checked){
-    const need=positionsFor(type).length;
-    const cards=Array.from(board.querySelectorAll('.tarot-card'));
-    let i=0; const total=Math.min(cards.length,need);
-    const tick=()=>{ if(i>=total) return; const c=cards[i++]; void c.offsetHeight; c.classList.add('flipped'); setTimeout(tick,150); };
-    if(total>0) requestAnimationFrame(()=>setTimeout(tick,120));
+    let i=0; const total=cards.length;
+    const tick=()=>{ if(i>=total) return; const c=cards[i++]; void c.offsetHeight; c.classList.add('flipped'); setTimeout(tick,FLIP_DELAY); };
+    if(total>0) requestAnimationFrame(()=>setTimeout(tick,FLIP_START));
+    revealLongReadsAfterFlips(total);
+  } else {
+    revealLongReadsAfterFlips(cards.length);
   }
 
+  // Paylaşım linkleri
   const st=getState(); saveLocal(st);
   const url=shareURL(st); sharebar.hidden=false;
   copyBtn.onclick=async()=>{ try{ await navigator.clipboard.writeText(url); copyBtn.textContent=(langSel.value==='tr'?'Kopyalandı':'Copied'); setTimeout(()=>copyBtn.textContent=L.copyLink,1200);}catch(e){ alert(url);} };
@@ -556,28 +564,88 @@ function afterDeal(type){
   xBtn.onclick =()=>{ const t=encodeURIComponent(`Tabirly Tarot — ${url}`); window.open(`https://twitter.com/intent/tweet?text=${t}`,'_blank'); };
 }
 
+/* ---- GÖRSEL KAYDET ---- */
 savePng?.addEventListener('click',async()=>{
   try{
     const node=board;
-    const canvas=await html2canvas(node,{backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12',useCORS:true,scale:2});
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg')||'#0b0d12';
+    const canvas=await html2canvas(node,{backgroundColor:bg,useCORS:true,scale:2});
     const link=document.createElement('a'); link.download='tabirly-tarot.png'; link.href=canvas.toDataURL('image/png'); link.click();
   }catch(e){ alert(langSel.value==='tr'?'Görsel oluşturulamadı :(':'Could not create image :('); }
 });
 
+/* ---- THEME ---- */
 function applyTheme(){ document.documentElement.setAttribute('data-theme', themeSel.value); saveLocal(getState()); }
 themeSel.addEventListener('change',applyTheme);
 
-/* reaktif deck / dil / spread */
+/* ================================
+   4) SOFT RESET + DEAL
+   - Deal’a basınca otomatik temizle
+================================ */
+function softResetBeforeNewDeal(){
+  // Yorumlar, sharebar, açıklama kapansın; deck/board sıfırlansın
+  hideResultsAreas();
+  board.innerHTML='';
+  deck.innerHTML='';
+  deck.hidden = !pickMode.checked;
+  pickCounterEl.style.display='none';
+  LAST_PICKS = [];
+  board.setAttribute('aria-busy','true');
+}
+
+function deal(){
+  if (!TAROT.cards.length) return;
+  softResetBeforeNewDeal();        // <<< YENİ: otomatik reset
+  board.classList.add('shuffle'); setTimeout(()=>board.classList.remove('shuffle'),250);
+  const type=spreadSel.value; board.setAttribute('data-type',type);
+
+  if (pickMode.checked){
+    renderDeck();                  // pick modda sadece deck’i göster
+    const need = positionsFor(type).length;
+    summary.textContent = UI[langSel.value].pickModeHint(need);
+    explain.hidden=false; board.setAttribute('aria-busy','false');
+    // Yorumlar seçim bitene kadar kesinlikle görünmesin
+    longSec.hidden = true;
+    return;
+  }
+
+  const need=positionsFor(type).length;
+  const d=TAROT.cards.slice(); shuffle(d);
+  LAST_PICKS=d.slice(0,need).map(c=>({...c,reversed:allowRev.checked?(Math.random()<.5):false}));
+  LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card,type,i)) );
+  afterDeal(type);
+}
+
+/* ---- Etkileşimler ---- */
+function applyLocaleAndMaybeRedraw(){
+  applyLocale();
+  // Çeviri sonrası yorumları yine EN SONA, senkron göster
+  if(LAST_PICKS.length){
+    longSec.hidden=true;
+    fillLongReads(spreadSel.value);
+    longSec.hidden=false;
+  }
+}
+
+function applyThemeAndSave(){ applyTheme(); saveLocal(getState()); }
+
 pickMode.addEventListener('change',()=>{
+  hideResultsAreas();
   if (pickMode.checked){ board.innerHTML=''; renderDeck(); }
   else { deck.hidden=true; pickCounterEl.style.display='none'; }
 });
-spreadSel.addEventListener('change',()=>{ if (pickMode.checked) renderDeck(); });
-langSel.addEventListener('change',()=>{ saveLocal(getState()); applyLocale(); });
+spreadSel.addEventListener('change',()=>{
+  hideResultsAreas();
+  if (pickMode.checked) renderDeck();
+});
+langSel.addEventListener('change',()=>{ saveLocal(getState()); applyLocaleAndMaybeRedraw(); });
 dealBtn.addEventListener('click',deal);
 
-/* init */
+/* ================================
+   5) INIT
+================================ */
 (async function init(){
+  // TR varsayılan seçenekleri ekle (ilk yüklemede buton disabled zaten)
   for(const [lang,L] of Object.entries(UI)){
     if(lang==='tr'){
       ['one','three','celtic','relation'].forEach(key=>{
@@ -597,7 +665,6 @@ dealBtn.addEventListener('click',deal);
   const theme = (st?.theme)||'dark'; themeSel.value=theme; applyTheme();
   applyLocale();
 
-  // 🔑 önce veri setini yükle (GitHub JSON)
   await loadTarot();
 
   if(st){
@@ -605,6 +672,7 @@ dealBtn.addEventListener('click',deal);
     allowRev.checked=!!st.allowReversed; autoFlip.checked=!!st.autoFlip;
     showImages.checked=!!st.showImages; pickMode.checked=!!st.pickMode;
   }
+
   if(pickMode.checked) renderDeck();
 
   if(st && st.cards && st.cards.length && TAROT.cards.length){
@@ -613,11 +681,17 @@ dealBtn.addEventListener('click',deal);
       const base=TAROT.cards.find(x=>x.id===k.id) || TAROT.cards[0];
       return {...base, reversed:!!k.reversed};
     });
+    board.innerHTML='';
     LAST_PICKS.forEach((card,i)=> board.appendChild(renderCard(card, st.type, i)) );
-    fillLongReads(st.type);
+
+    // Açıklama göster, yorumlar EN SON’da
     const L=UI[langSel.value];
     summary.textContent=(L.loaded[st.type] || '') + (st.question?(langSel.value==='tr'?` Soru: “${st.question}”.`:` Question: “${st.question}”.`):'') + L.summaryHint;
     explain.hidden=false; sharebar.hidden=false;
+
+    // Eski durumdan gelirken flip animasyonu beklemiyoruz; yorumları senkron göster
+    fillLongReads(st.type);
+    longSec.hidden=false;
   }
 })();
 </script>
